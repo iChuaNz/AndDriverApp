@@ -1,0 +1,131 @@
+<resources>
+    <string name="app_name">Bus Link Partner</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Commute</string>
+    <string name="title_activity_login">Login</string>
+    <string name="title_activity_veri_code">Enter Verification Code</string>
+    <string name="title_activity_route_tracker">Enter Your Route Access Code</string>
+    <string name="title_activity_web">Browser</string>
+    <string name="prompt_phonenumber">Enter Phone Number</string>
+    <string name="prompt_username">Username</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_log_in">Log in</string>
+    <string name="action_log_out">Log out</string>
+    <string name="error_invalid_username">This username length must be at least 6 characters</string>
+    <string name="tracker_route_greet">Welcome 98887766</string>
+    <string name="tracker_route_lblrouteid">Please enter your Route AccessCode</string>
+    <string name="tracker_route_txtrouteid">Enter Your Route AccessCode Here</string>
+    <string name="tracker_route_lblupdateplateno">Update Vehicle</string>
+    <string name="tracker_route_btnautofetch">Fetch Trip From Operation</string>
+    <string name="tracker_route_txtupdateplateno">SG1234</string>
+    <string name="veri_code_text">Enter 6 Digit Code Here</string>
+    <string name="veri_code_description">Please enter the 6 digit passcode send to your mobile number</string>
+    <string name="veri_code_phone_sample">+65 9XXX XXXX</string>
+    <string name="error_invalid_phonenumber">Phone Number should be only 8 characters</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="error_url_not_found">There is an error in request</string>
+    <string name="error_password_length">Password length must be at least 6 characters</string>
+    <string name="start_service">Start Service</string>
+    <string name="action_home">Home</string>
+    <string name="show_messages">Show Messages</string>
+    <string name="show_CanID">Display Can ID</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="btle_not_supported">This phone does not support Bluetooth LE</string>
+    <string name="bt_title">Bluetooth Device Search</string>
+    <string name="bt_not_supported">This phone does not support Bluetooth</string>
+    <string name="logout_unlocked">Admin permissions enabled</string>
+    <string name="settings_saved">Settings Saved</string>
+    <string name="unknown_device">Unknown Device</string>
+    <string name="no_device_found">Searching for nearby bluetooth Devices...</string>
+    <string name="bt_found">List of Bluetooth Device found</string>
+    <string name="generic_title_error">Error!</string>
+    <string name="no_external_device">You have selected External NFC. Please pair with a card reading Device to proceed. Otherwise, please select other NFC options.</string>
+    <string name="nonfc">No NFC</string>
+    <string name="internalnfc">Internal NFC</string>
+    <string name="externalnfc">External NFC</string>
+    <string name="usbreader">USB Reader</string>
+    <string name="selectMode">Pick Up</string>
+    <string name="settings">Settings</string>
+    <string name="refreshJobs">Fetch Jobs</string>
+    <string name="sendData">Send Data</string>
+    <string name="scanQRCode">Scan QR</string>
+    <string name="viewJobDetails">View Job Details</string>
+    <string name="viewDetails">View Passenger Details</string>
+    <string name="followsCamera">Camera - Automatic</string>
+    <string name="logSheet">Log Sheet</string>
+
+    <!--Log Sheet-->
+    <string name="title_activity_sheet_log">Log Sheet</string>
+    <string name="title_sheet_log">To be filled by user unit OIC ONLY</string>
+    <string name="label_log_sheet_User">User</string>
+    <string name="hide_log_sheet_User">Enter your Dept/Branch/Coy/Pit</string>
+    <string name="label_log_sheet_FullName">Name of OIC</string>
+    <string name="label_log_sheet_Signature">Signature</string>
+    <string name="hide_log_sheet_FullName">Enter your Full Name</string>
+    <string name="button_log_sheet">Submit</string>
+    <string name="button_clear_signature">Clear Signature</string>
+    <!--Chartering-->
+    <string name="title_activity_available_charter">Available Charters</string>
+    <string name="title_activity_new_charter">Create Charter</string>
+    <string name="title_activity_your_charter">Sub Out Charter</string>
+    <string name="title_activity_charter_profile">Profile</string>
+    <string name="title_activity_dispute">Disputed Charter</string>
+    <string name="title_activity_transaction_history">Transaction History</string>
+    <string name="title_activity_update_charter">Update Charter</string>
+    <string name="no_listing_text">Stay tuned for upcoming charters!</string>
+    <string name="no_transaction_text">No transaction records found</string>
+    <string name="no_dispute_text">No disputed charter records found</string>
+    <string name="no_subout_text">Create a Charter Here</string>
+    <string name="no_acceptjob_text">View Available Jobs</string>
+    <string name="radioTracker">Tracking</string>
+    <string name="radioChartering">Chartering</string>
+    <string name="toChartering">To Charter Menu</string>
+    <string name="toTracking">To Tracker</string>
+    <string name="next">Next</string>
+    <string name="newCharter">Add new Charter</string>
+    <string name="viewCharter">View Available Charters</string>
+    <string name="ownCharter">My Subout Jobs</string>
+    <string name="successfulBids">My Scheduled Jobs</string>
+    <string name="profile">Profile</string>
+    <string name="dispute">Disputed Charters</string>
+    <string name="choosepickup">Please choose a pickup point</string>
+    <string name="choosedropoff">Please choose a drop off point</string>
+    <string name="oneway">One-Way</string>
+    <string name="twoway">Two-Way</string>
+    <string name="hourlydisposal">Disposal</string>
+    <string name="busType">Vehicle Capacity</string>
+    <string name="busQuantity">Quantity</string>
+    <string name="suboutPrice">Sub Out Price($)</string>
+    <string name="suboutPrice_hint"><font size="13">eg. 100</font></string>
+    <string name="busQuantity_hint"><font size="13">eg. 1</font></string>
+    <string name="charteringHours_hint"><font size="13">No. of Hrs</font></string>
+    <string name="default_text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
+
+    <!--Contract Services-->
+    <string name="title_activity_contract_pickup">Select a Pick Up Point</string>
+    <string name="title_activity_contract_dropoff">Select a Drop Off Point</string>
+    <string name="title_activity_contract_details">Details</string>
+    <string name="title_activity_contract_viewall">View Contracts</string>
+    <string name="title_activity_contract_viewsingle">Contract</string>
+    <string name="contractservices">Contract Services</string>
+    <string name="backToCharter">Back to Charters</string>
+    <string name="viewContract">View All Contracts</string>
+    <string name="createContract">Create New Contract Job</string>
+    <string name="contractResourceString">Please enter any addtional information you wish to include in this contract job here.</string>
+    <string name="contractBusSizePrompt">Select the bus size required</string>
+    <string name="contract_period">Contract Period</string>
+    <string name="first_pickup_time">First Pickup Time</string>
+    <string name="bus_size">Bus Size</string>
+    <string name="cost">Cost Per Month</string>
+    <string name="service_already_running">Service is already running</string>
+    <string name="service_start_successfully">Service start successfully</string>
+    <string-array name="busTypeArray">
+        <item>11-Seater</item>
+        <item>13-Seater</item>
+        <item>19-Seater</item>
+        <item>23-Seater</item>
+        <item>40-Seater</item>
+        <item>45-Seater</item>
+        <item>49-Seater</item>
+    </string-array>
+</resources>

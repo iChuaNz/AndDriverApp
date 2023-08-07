@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.SplashActivity"
+    android:fitsSystemWindows="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splashicon"
+    android:layout_gravity="center"
+    android:id="@+id/splash_screen"
+    android:gravity="center">
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
+    <com.crystal.crystalpreloaders.widgets.CrystalPreloader
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:crs_pl_style="skype_balls"
+        app:crs_pl_size="very_small"
+        app:crs_pl_fg_color="#fff"
+        app:crs_pl_bg_color="#000"/>
+
+</LinearLayout>

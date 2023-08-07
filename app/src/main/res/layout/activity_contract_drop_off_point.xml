@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.charters.contractservices.DropOffPointActivity" >
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible" >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingTop="15dp"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="#F2F1EF"
+                android:text="@string/title_activity_contract_dropoff"/>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <FrameLayout
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:id="@+id/contract_dropoff_map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/cast_intro_overlay_button_margin_bottom" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#F68B1F"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginTop="50dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_add_dropoff_1"
+                android:layout_width="33dp"
+                android:layout_height="33dp"
+                android:layout_margin = "20dp"
+                android:background="@drawable/addrow"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:layout_gravity="center"
+                android:textColor="#F2F1EF"
+                android:text="1"/>
+
+            <TextView
+                android:id="@+id/txt_contract_dropoff_1"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_margin = "20dp"
+                android:gravity="left|center"
+                android:paddingLeft="10dp"
+                android:hint="@string/choosedropoff"
+                android:textAppearance="?android:attr/textAppearanceSearchResultSubtitle"
+                android:background="@drawable/rounded_edittext" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_additional_dropoff_view_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_add_dropoff_2"
+                android:layout_width="33dp"
+                android:layout_height="33dp"
+                android:layout_margin = "20dp"
+                android:background="@drawable/addrow"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:layout_gravity="center"
+                android:textColor="#F2F1EF"
+                android:text="2"/>
+
+            <TextView
+                android:id="@+id/txt_contract_dropoff_2"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_margin = "20dp"
+                android:gravity="left|center"
+                android:paddingLeft="10dp"
+                android:hint="@string/choosedropoff"
+                android:textAppearance="?android:attr/textAppearanceSearchResultSubtitle"
+                android:background="@drawable/rounded_edittext" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_additional_dropoff_view_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_add_dropoff_3"
+                android:layout_width="33dp"
+                android:layout_height="33dp"
+                android:layout_margin = "20dp"
+                android:visibility="invisible"
+                android:background="@drawable/addrow"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:layout_gravity="center"
+                android:textColor="#F2F1EF"
+                android:text="3"/>
+
+            <TextView
+                android:id="@+id/txt_contract_dropoff_3"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_margin = "20dp"
+                android:gravity="left|center"
+                android:paddingLeft="10dp"
+                android:hint="@string/choosedropoff"
+                android:textAppearance="?android:attr/textAppearanceSearchResultSubtitle"
+                android:background="@drawable/rounded_edittext" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="end"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/cb_hasERP"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:textColor="#F2F1EF"
+                android:text="Will pass by ERP"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:layout_gravity="bottom|right">
+
+        <Button
+            android:id="@+id/btn_toDropOffPage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Next Page"/>
+
+    </RelativeLayout>
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_contractMenu2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:elevation="6dp"
+        app:menu_icon="@drawable/menuicon"
+        app:menu_labels_ellipsize="end"
+        app:menu_labels_singleLine="true"
+        app:menu_fab_size="mini"
+        app:menu_openDirection="down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_toChartering2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/createcharter"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/backToCharter" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_viewContracts2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/viewcontractjob"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/viewContract" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</android.support.design.widget.CoordinatorLayout>

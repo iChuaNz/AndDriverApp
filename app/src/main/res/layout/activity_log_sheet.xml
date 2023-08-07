@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.LoginActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <ImageView
+                android:id="@+id/btn_language"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="right"
+                android:src="@drawable/language_option"/>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <LinearLayout
+        android:id="@+id/log_sheet_form"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="60dp">
+
+        <TextView
+            android:id="@+id/lbl_log_sheet_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:gravity="center"
+            android:paddingLeft="10dp"
+            android:text="@string/title_sheet_log"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <TextView
+            android:id="@+id/lbl_log_sheet_user"
+            android:layout_width="match_parent"
+            android:layout_height="47dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="bottom"
+            android:paddingLeft="10dp"
+            android:text="@string/label_log_sheet_User"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/txtLogSheetUser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hide_log_sheet_User"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingLeft="10dp" />
+
+        <TextView
+            android:id="@+id/lbl_log_sheet_fullname"
+            android:layout_width="match_parent"
+            android:layout_height="53dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="bottom"
+            android:paddingLeft="10dp"
+            android:text="@string/label_log_sheet_FullName"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/txtLogSheetFullName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hide_log_sheet_FullName"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingLeft="10dp" />
+
+        <TextView
+            android:id="@+id/lbl_log_sheet_signature"
+            android:layout_width="match_parent"
+            android:layout_height="53dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="bottom"
+            android:paddingLeft="10dp"
+            android:text="@string/label_log_sheet_Signature"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <com.github.gcacace.signaturepad.views.SignaturePad
+            android:id="@+id/signature_pad"
+            style="border"
+            android:layout_width="match_parent"
+            android:layout_height="295dp"
+            app:penColor="@android:color/black" />
+
+        <ProgressBar
+            android:id="@+id/logSheetProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!--<TextView-->
+        <!--android:id="@+id/error_msg"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:paddingLeft="10dp" />-->
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/log_sheet_form_button"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:orientation="vertical"
+        android:paddingTop="60dp"
+        app:layout_anchor="@+id/log_sheet_form"
+        app:layout_anchorGravity="center">
+
+        <Button
+            android:id="@+id/btn_log_sheet_clear"
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/button_clear_signature"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/btn_log_sheet_submit"
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/button_log_sheet"
+            android:textStyle="bold" />
+
+        <!--<TextView-->
+        <!--android:id="@+id/error_msg"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:paddingLeft="10dp" />-->
+
+    </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>

@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.MapsActivity">
+
+    <include
+        android:id="@+id/include"
+        layout="@layout/include_progress_overlay" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:background="@drawable/background_with_shadow"
+        android:layout_marginTop="@dimen/cast_intro_overlay_button_margin_bottom">
+
+        <FrameLayout
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.MapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+        </FrameLayout>
+
+        <Button
+            android:id="@+id/btnEnd"
+            android:layout_width="match_parent"
+            android:layout_height="190dp"
+            android:layout_weight="1"
+            android:background="#F68B1F"
+            android:text="END TRIP"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/lnrFourDigit"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/border"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="20dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txt_boardingCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:text="Please Call Office"
+                    android:textSize="17dp" />
+
+                <TextView
+                    android:id="@+id/txt_fourDigit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="-15dp"
+                    android:layout_weight="115"
+                    android:text="Error"
+                    android:textSize="60dp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+
+                <ImageView
+                    android:id="@+id/imgPhone"
+                    android:layout_width="75dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:src="@drawable/frame" />
+
+                <ImageView
+                    android:id="@+id/imgBackground"
+                    android:layout_width="65dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginEnd="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="@color/colorRed"
+                    android:radius="12dp"
+                    android:src="@drawable/phone" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/iv_passenger_result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone" />
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:elevation="6dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        app:menu_fab_size="mini"
+        app:menu_icon="@drawable/menuicon"
+        app:menu_labels_ellipsize="end"
+        app:menu_labels_singleLine="true"
+        app:menu_openDirection="down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_log_sheet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_sheet"
+            app:fab_label="@string/logSheet"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_viewDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/info"
+            app:fab_label="@string/viewDetails"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_viewJobDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/info"
+            app:fab_label="@string/viewJobDetails"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_sendData"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/send"
+            app:fab_label="@string/sendData"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_scanQR"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/qrcode"
+            app:fab_label="@string/scanQRCode"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/refresh"
+            app:fab_label="@string/refreshJobs"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_toChartering"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/chartermenuorhome"
+            android:visibility="gone"
+            app:fab_label="@string/toChartering"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/settings"
+            app:fab_label="@string/settings"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_pickUp_DropOff"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/info"
+            app:fab_label="@string/selectMode"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_followCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/info"
+            app:fab_label="@string/followsCamera"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <TextView
+            android:id="@+id/txt_passenger_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:textSize="25dp"
+            android:visibility="gone" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+
+                <Switch
+                    android:id="@+id/switch_tracking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:height="120dp"
+                    android:checked="true"
+                    android:showText="true"
+                    android:switchMinWidth="53dp"
+                    android:textOff="OFF"
+                    android:textOn="ON"
+                    android:thumb="@drawable/thumb"
+                    android:thumbTextPadding="10dp" />
+
+                <ImageView
+                    android:id="@+id/iv_nfcconnectionstatus"
+                    android:layout_width="53dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txt_jobStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="60dp"
+                android:gravity="center_vertical|center_horizontal"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <FrameLayout
+        android:id="@+id/fl_popupWindow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="72dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="72dp"
+        android:background="@drawable/popover_background"
+        android:clickable="true"
+        android:padding="20dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/btn_closePopup"
+            android:layout_width="50dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:src="@drawable/close_icon" />
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="70dp"
+            android:fillViewport="true">
+
+            <TableLayout
+                android:id="@+id/table_passengerList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:stretchColumns="0,1"></TableLayout>
+
+        </ScrollView>
+
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/btn_starttrip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/starttrip"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/btn_endtrip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+            android:src="@drawable/endtrip"
+            android:visibility="gone" />
+
+
+
+</android.support.design.widget.CoordinatorLayout>

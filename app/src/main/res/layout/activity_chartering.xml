@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.charters.AvailableCharterActivity" >
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <LinearLayout
+        android:id="@+id/empty_charter_background"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="#6B6B6B">
+    </LinearLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible" >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingTop="15dp"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="#F2F1EF"
+                android:text="@string/title_activity_available_charter"/>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:paddingTop="66dp"
+            android:paddingBottom="66dp"
+            android:id="@+id/swiperefresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fillViewport="true">
+
+            <TableLayout
+                android:id="@+id/table_charterList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:stretchColumns="0,1"
+                android:orientation="vertical">
+            </TableLayout>
+
+        </ScrollView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <ImageView
+        android:id="@+id/iv_empty_charter_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="60dp"
+        android:visibility="gone"
+        android:src="@drawable/noresults"/>
+
+    <TextView
+        android:id="@+id/txt_empty_charter_message"
+        android:layout_marginTop="143dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWhite"
+        android:visibility="gone"
+        android:layout_gravity="top|center_horizontal"
+        android:text="@string/no_listing_text"/>
+
+    <android.support.v7.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#F68B1F"
+        android:layout_gravity="bottom"
+        app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+        <ImageView
+            android:id="@+id/btn_previousSet"
+            android:src="@drawable/back_btn"
+            android:layout_width="wrap_content"
+            android:visibility="gone"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/btn_nextSet"
+            android:layout_gravity="right"
+            android:paddingEnd="15dp"
+            android:visibility="gone"
+            android:src="@drawable/next_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+    </android.support.v7.widget.Toolbar>
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_charteringMenu1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:elevation="6dp"
+        app:menu_icon="@drawable/menuicon"
+        app:menu_labels_ellipsize="end"
+        app:menu_labels_singleLine="true"
+        app:menu_fab_size="mini"
+        app:menu_openDirection="down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_profile1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/profile"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/profile" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_dispute1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/dispute"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/dispute" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_toTracking1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:src="@drawable/totracker"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/toTracking" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_successfulBids1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/successfulbids"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/successfulBids" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_ownCharter1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/mycharter"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/ownCharter" />
+
+        <!--<com.github.clans.fab.FloatingActionButton-->
+            <!--android:id="@+id/fab_viewCharter1"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:src="@drawable/availablecharterlist"-->
+            <!--app:menu_colorNormal="#2272CD"-->
+            <!--app:fab_size="mini"-->
+            <!--app:fab_label="@string/viewCharter" />-->
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_newCharter1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/createcharter"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/newCharter" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</android.support.design.widget.CoordinatorLayout>

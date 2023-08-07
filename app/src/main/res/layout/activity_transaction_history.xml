@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.charters.TransactionHistoryActivity" >
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <LinearLayout
+        android:id="@+id/empty_transaction_background"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="#6B6B6B">
+    </LinearLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible" >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingTop="15dp"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="#F2F1EF"
+                android:text="@string/title_activity_transaction_history"/>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <ScrollView
+        android:paddingTop="66dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:fillViewport="true">
+
+        <TableLayout
+            android:id="@+id/table_transactionhistory"
+            android:paddingLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:stretchColumns="0,1"
+            android:orientation="vertical">
+        </TableLayout>
+
+    </ScrollView>
+
+    <ImageView
+        android:id="@+id/iv_empty_transaction_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="60dp"
+        android:visibility="gone"
+        android:src="@drawable/noresults"/>
+
+    <TextView
+        android:id="@+id/txt_empty_transaction_message"
+        android:layout_marginTop="143dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWhite"
+        android:visibility="gone"
+        android:layout_gravity="top|center_horizontal"
+        android:text="@string/no_transaction_text"/>
+
+</android.support.design.widget.CoordinatorLayout>

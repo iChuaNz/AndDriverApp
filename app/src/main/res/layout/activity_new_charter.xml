@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.charters.NewCharterActivity" >
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible" >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingTop="15dp"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="#F2F1EF"
+                android:text="@string/title_activity_new_charter"/>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <FrameLayout
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:id="@+id/charter_map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/cast_intro_overlay_button_margin_bottom" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="133dp"
+        android:layout_marginTop="60dp"
+        android:background="@drawable/addcharter_top">
+
+        <TextView
+            android:id="@+id/txt_startLocation"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_marginStart="70dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="75dp"
+            android:background="@drawable/rounded_edittext"
+            android:gravity="left|center"
+            android:hint="@string/choosepickup"
+            android:paddingLeft="10dp"
+            android:textAppearance="?android:attr/textAppearanceSearchResultSubtitle" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txt_endLocation"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_marginStart="70dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="130dp"
+        android:paddingLeft="10dp"
+        android:gravity="left|center"
+        android:hint="@string/choosedropoff"
+        android:textAppearance="?android:attr/textAppearanceSearchResultSubtitle"
+        android:background="@drawable/rounded_edittext" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="190dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginEnd="7dp"
+        android:background="@drawable/background_with_shadow">
+
+        <LinearLayout
+            android:layout_width="0.1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/background_with_shadow" >
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0.1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/background_with_shadow" >
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0.1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/background_with_shadow" >
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="190dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginEnd="7dp" >
+
+        <ImageView
+            android:id="@+id/iv_oneway"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="10dp"
+            android:layout_weight="1"
+            android:src="@drawable/oneway_icon" />
+
+        <ImageView
+            android:id="@+id/iv_twoway"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="10dp"
+            android:layout_weight="1"
+            android:src="@drawable/twoway_icon" />
+
+        <ImageView
+            android:id="@+id/iv_disposal"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="10dp"
+            android:layout_weight="1"
+            android:src="@drawable/disposal_icon" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_marginTop="230dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginEnd="7dp"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_gravity="center"
+            android:layout_marginStart="5dp"
+            android:src="@drawable/signal_green"/>
+
+        <TextView
+            android:id="@+id/txt_onlineUsers"
+            android:layout_width="wrap_content"
+            android:layout_height="15dp"
+            android:layout_marginStart="10dp"
+            android:layout_gravity="center|left"
+            android:textStyle="bold"
+            android:textSize="11sp"
+            android:text="Users online: 8888888"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="136dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginEnd="7dp"
+        android:layout_marginBottom="7dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="@drawable/background_with_shadow" >
+
+        <LinearLayout
+            android:layout_width="0.1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:background="@drawable/background_with_shadow" >
+
+            <ImageView
+                android:id="@+id/iv_dateSignage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="5dp"
+                android:paddingStart="12dp"
+                android:src="@drawable/date_signage"/>
+
+            <Button
+                android:id="@+id/txt_chooseDate"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_marginStart="12dp"
+                android:layout_marginBottom="13dp"
+                android:background="#F2F1EF" />
+
+            <TextView
+                android:id="@+id/txt_vehicleType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:text="@string/busType"/>
+
+            <Spinner
+                android:id="@+id/busTypeSpinner"
+                style="@style/SpinnerLayout"
+                android:background="@null"
+                android:layout_marginStart="12dp"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0.1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:background="@drawable/background_with_shadow" >
+
+            <ImageView
+                android:id="@+id/iv_pickupSignage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="5dp"
+                android:paddingStart="12dp"
+                android:src="@drawable/time_signage"/>
+
+            <Button
+                android:id="@+id/txt_choosePickupTime"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_marginStart="12dp"
+                android:layout_marginBottom="13dp"
+                android:textAllCaps="false"
+                android:background="#F2F1EF"
+                android:hint="Pick up time " />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:text="@string/busQuantity"/>
+
+            <EditText
+                android:id="@+id/et_busQuantity"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_marginTop="7dp"
+                android:hint="@string/busQuantity_hint"
+                android:background="@null"
+                android:maxLength="2" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0.1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:background="@drawable/background_with_shadow" >
+
+            <ImageView
+                android:id="@+id/twoway_signage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="5dp"
+                android:paddingStart="12dp"
+                android:src="@drawable/time_signage"/>
+
+            <Button
+                android:id="@+id/txt_chooseReturnTime"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_marginStart="12dp"
+                android:layout_marginBottom="13dp"
+                android:textAllCaps="false"
+                android:background="#F2F1EF"
+                android:hint="Return time " />
+
+            <EditText
+                android:id="@+id/txt_chooseDisposalHours"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="27dp"
+                android:maxLength="2"
+                android:layout_marginBottom="14dp"
+                android:background="@null"
+                android:visibility="gone"
+                android:hint="@string/charteringHours_hint" />
+
+            <TextView
+                android:id="@+id/txt_pricing_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:text="@string/suboutPrice"/>
+
+            <EditText
+                android:id="@+id/et_suboutPrice"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_marginTop="7dp"
+                android:hint="@string/suboutPrice_hint"
+                android:background="@null"
+                android:maxLength="3" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="7dp"
+        android:layout_marginEnd="7dp"
+        android:layout_marginBottom="71dp"
+        android:background="@drawable/background_with_shadow" >
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/btn_add_charter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="17dp"
+        android:layout_marginBottom="145dp"
+        android:src="@drawable/add_charter"/>
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_charteringMenu2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:elevation="6dp"
+        app:menu_icon="@drawable/menuicon"
+        app:menu_labels_ellipsize="end"
+        app:menu_labels_singleLine="true"
+        app:menu_fab_size="mini"
+        app:menu_openDirection="down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_profile2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/profile"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/profile" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_contract2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/createcontractjob"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/contractservices" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_dispute2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/dispute"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/dispute" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_toTracking2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/totracker"
+            android:visibility="gone"
+            app:fab_label="@string/toTracking"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_successfulBids2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/successfulbids"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/successfulBids" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_ownCharter2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/mycharter"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/ownCharter" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_viewCharter2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/availablecharterlist"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/viewCharter" />
+
+        <!--<com.github.clans.fab.FloatingActionButton-->
+            <!--android:id="@+id/fab_newCharter"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:src="@drawable/info"-->
+            <!--app:menu_colorNormal="#2272CD"-->
+            <!--app:fab_size="mini"-->
+            <!--app:fab_label="@string/newCharter" />-->
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</android.support.design.widget.CoordinatorLayout>

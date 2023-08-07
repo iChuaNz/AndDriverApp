@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.charters.YourCharterActivity" >
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <LinearLayout
+        android:id="@+id/empty_jobs_background"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="#6B6B6B">
+    </LinearLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible" >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <TextView
+                android:id="@+id/txt_title_your_successful_charter"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingTop="15dp"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="#F2F1EF"
+                android:text="@string/title_activity_your_charter" />
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:paddingTop="66dp"
+        android:id="@+id/swiperefresh2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fillViewport="true">
+
+            <TableLayout
+                android:id="@+id/table_yourSuccessfulCharterList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:stretchColumns="0,1"
+                android:orientation="vertical">
+            </TableLayout>
+
+        </ScrollView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <ImageView
+        android:id="@+id/iv_empty_job_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="60dp"
+        android:visibility="gone"
+        android:src="@drawable/noresults"/>
+
+    <TextView
+        android:id="@+id/txt_no_subout_job_message"
+        android:layout_marginTop="143dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWhite"
+        android:visibility="gone"
+        android:layout_gravity="top|center_horizontal"
+        android:text="@string/no_subout_text"/>
+
+    <TextView
+        android:id="@+id/txt_no_accept_job_message"
+        android:layout_marginTop="143dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWhite"
+        android:visibility="gone"
+        android:layout_gravity="top|center_horizontal"
+        android:text="@string/no_acceptjob_text"/>
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_charteringMenu3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:elevation="6dp"
+        app:menu_icon="@drawable/menuicon"
+        app:menu_labels_ellipsize="end"
+        app:menu_labels_singleLine="true"
+        app:menu_fab_size="mini"
+        app:menu_openDirection="down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_profile3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/profile"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/profile" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_dispute3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/dispute"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/dispute" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_toTracking3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/totracker"
+            android:visibility="gone"
+            app:fab_label="@string/toTracking"
+            app:fab_size="mini"
+            app:menu_colorNormal="#2272CD" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_successfulBids3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/successfulbids"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/successfulBids" />
+
+        <!--<com.github.clans.fab.FloatingActionButton-->
+            <!--android:id="@+id/fab_ownCharter3"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:src="@drawable/refresh"-->
+            <!--app:menu_colorNormal="#2272CD"-->
+            <!--app:fab_size="mini"-->
+            <!--app:fab_label="@string/ownCharter" />-->
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_viewCharter3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/availablecharterlist"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/viewCharter" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_newCharter3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/createcharter"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/newCharter" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</android.support.design.widget.CoordinatorLayout>

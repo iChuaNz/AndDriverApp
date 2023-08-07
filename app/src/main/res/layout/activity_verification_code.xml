@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.LoginActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <ImageView
+                android:id="@+id/btn_language"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="end"
+                android:src="@drawable/language_option" />
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include layout="@layout/include_progress_overlay"/>
+
+        <LinearLayout
+            android:id="@+id/email_login_form"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingTop="60dp">
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </android.support.design.widget.TextInputLayout>
+
+            <TextView
+                android:id="@+id/lblVeriCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="50dp"
+                android:paddingRight="50dp"
+                android:text="@string/veri_code_description"
+                android:textAlignment="center"
+                tools:text="@string/veri_code_description" />
+
+            <TextView
+                android:id="@+id/lblVeriCodePhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="50dp"
+                android:paddingRight="50dp"
+                android:text="@string/veri_code_phone_sample"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="@string/veri_code_phone_sample" />
+
+            <EditText
+                android:id="@+id/sixDigitCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/veri_code_text"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp" />
+
+            <Button
+                android:id="@+id/btnNext"
+                style="?android:textAppearanceSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/next"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/codeProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <!--<TextView-->
+                <!--android:id="@+id/error_msg"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:paddingLeft="10dp" />-->
+
+        </LinearLayout>
+    <FrameLayout
+        android:id="@+id/fl_popupSelection"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="150dp"
+        android:layout_marginBottom="72dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:padding="20dp"
+        android:clickable="true"
+        android:visibility="gone"
+        android:background="@drawable/popover_background">
+        <TextView
+            android:id="@+id/txtModeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Please select a mode:"/>
+        <RadioGroup
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="20dp"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/radio_tracker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRadioButtonClicked"
+                android:text="@string/radioTracker" />
+            <RadioButton android:id="@+id/radio_charter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radioChartering"
+                android:onClick="onRadioButtonClicked"/>
+        </RadioGroup>
+        <Button
+            android:id="@+id/btn_Next"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="@string/next" />
+    </FrameLayout>
+</android.support.design.widget.CoordinatorLayout>

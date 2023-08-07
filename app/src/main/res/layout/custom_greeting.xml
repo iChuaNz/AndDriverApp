@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="370dp">
+
+
+        <TextView
+            android:id="@+id/txtTitleDialog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:text="Good Morning, Mr Lee"
+            android:textColor="@android:color/black"
+            android:textSize="40dp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/txtDescriptionDialog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:text="Boarding Code TM 3 today is:"
+            android:textColor="@android:color/black"
+            android:textSize="20dp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/txtFourDigitDialog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:text="2525"
+            android:textColor="@android:color/black"
+            android:textSize="80dp"
+            android:textStyle="bold"/>
+
+        <Button
+            android:id="@+id/btnOkDialog"
+            android:layout_width="fill_parent"
+            android:layout_height="50dp"
+            android:layout_marginLeft="5dp"
+            android:background="@color/colorRed"
+            android:clickable="true"
+            android:text="OK"
+            android:textSize="30dp"
+            android:textColor="@android:color/white"
+            android:layout_margin="10dp"
+            android:textStyle="bold" />
+
+    </LinearLayout>

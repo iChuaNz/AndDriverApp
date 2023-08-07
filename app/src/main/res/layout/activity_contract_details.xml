@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.charters.contractservices.ContractDetailsActivity" >
+
+    <include layout="@layout/include_progress_overlay"/>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:visibility="visible" >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#F68B1F"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingTop="15dp"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="#F2F1EF"
+                android:text="@string/title_activity_contract_details"/>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="11dp"
+                        android:textSize="17sp"
+                        android:text="Start Date:"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="11dp"
+                        android:textSize="17sp"
+                        android:text="End Date:" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="11dp"
+                        android:textSize="17sp"
+                        android:text="Pick Up Time:" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="11dp"
+                        android:textSize="17sp"
+                        android:text="Contact Number:" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="11dp"
+                        android:textSize="17sp"
+                        android:text="Cost per month" />
+
+                    <CheckBox
+                        android:id="@+id/cb_includesERP"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="11dp"
+                        android:text="Includes ERP"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="11dp"
+                        android:textSize="17sp"
+                        android:text="Bus Size:" />
+
+                </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/et_contractStartDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:layout_marginBottom="11dp"
+                    android:textSize="17sp"
+                    android:hint="1-Jan-2018" />
+
+                <TextView
+                    android:id="@+id/et_contractEndDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:layout_marginBottom="11dp"
+                    android:textSize="17sp"
+                    android:hint="31-Jan-2018" />
+
+                <TextView
+                    android:id="@+id/et_contractPickupTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:layout_marginBottom="11dp"
+                    android:textSize="17sp"
+                    android:hint="07:00AM" />
+
+                <EditText
+                    android:id="@+id/et_contractContactNo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:layout_marginBottom="11dp"
+                    android:inputType="phone"
+                    android:maxLength="8"
+                    android:background="@null"
+                    android:hint="91234567"/>
+
+                <com.blackcat.currencyedittext.CurrencyEditText
+                    android:id="@+id/et_contractCostPerMonth"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:layout_marginBottom="11dp"
+                    android:background="@null" />
+
+                <TextView
+                    android:id="@+id/filler"
+                    android:visibility="invisible"
+                    android:layout_marginTop="11dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <Spinner
+                    android:id="@+id/contractBusSizeSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:layout_marginBottom="11dp"
+                    android:entries="@array/busTypeArray"
+                    android:prompt="@string/contractBusSizePrompt" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="17sp"
+                android:layout_marginStart="11dp"
+                android:text="Additional Information:" />
+
+            <sg.com.commute_solutions.bustracker.util.LineEditText
+                android:id="@+id/et_contractAdditionalInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="11dp"
+                android:layout_marginEnd="11dp"
+                android:layout_marginBottom="11dp"
+                android:gravity="top|left"
+                android:maxLines="15"
+                android:ems="10"
+                android:hint="@string/contractResourceString"/>
+
+            <Button
+                android:id="@+id/btn_submitContract"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="11dp"
+                android:layout_marginEnd="11dp"
+                android:layout_marginBottom="11dp"
+                android:text="Submit"
+                android:layout_gravity="end"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_contractMenu3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:elevation="6dp"
+        app:menu_icon="@drawable/menuicon"
+        app:menu_labels_ellipsize="end"
+        app:menu_labels_singleLine="true"
+        app:menu_fab_size="mini"
+        app:menu_openDirection="down">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_toChartering3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/createcharter"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/backToCharter" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_viewContracts3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/viewcontractjob"
+            app:menu_colorNormal="#2272CD"
+            app:fab_size="mini"
+            app:fab_label="@string/viewContract" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</android.support.design.widget.CoordinatorLayout>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style parent="@android:style/Widget.Spinner" name="SpinnerLayout">
+        <item name="android:background">@android:drawable/edit_text</item>
+    </style>
+</resources>

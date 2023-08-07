@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="11dp"
+    android:background="#F2F1EF"
+    android:orientation="horizontal">
+
+    <com.silencedut.expandablelayout.ExpandableLayout
+        app:expWithParentScroll="true"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1" >
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" >
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="5dp"
+                            android:layout_weight="1" >
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="#F68B1F"
+                                android:textColor="#F2F1EF"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:text=" Start Date "/>
+
+                            <TextView
+                                android:id="@+id/contractStartDate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="12sp"
+                                android:text="88/88/8888"/>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginStart="5dp"
+                            android:layout_marginEnd="5dp"
+                            android:layout_weight="1" >
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="#F68B1F"
+                                android:textColor="#F2F1EF"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:text=" Pickup Time "/>
+
+                            <TextView
+                                android:id="@+id/contractPickupTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingStart="10dp"
+                                android:textSize="12sp"
+                                android:text="88:88 HRS"/>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#F68B1F"
+                        android:textColor="#F2F1EF"
+                        android:layout_marginTop="10dp"
+                        android:text="  Pick Up  "/>
+
+                    <TextView
+                        android:id="@+id/contractPickup"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:textSize="13sp"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:text="@string/default_text"
+                        android:layout_weight="1"
+                        android:scrollHorizontally="false" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#F68B1F"
+                        android:textColor="#F2F1EF"
+                        android:text=" Drop Off "/>
+
+                    <TextView
+                        android:id="@+id/contractDropoff"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:textSize="13sp"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                        android:layout_weight="1"
+                        android:scrollHorizontally="false" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1" >
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="10dp"
+                        android:src="@drawable/subout_price" />
+
+                    <TextView
+                        android:id="@+id/contractCost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="15dp"
+                        android:textSize="12sp"
+                        android:text="SGD $88888.88 (Per Month)"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal" >
+
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginStart="10dp"
+                            android:src="@drawable/buscapacity_icon" />
+
+                        <TextView
+                            android:id="@+id/contractBusType"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:paddingStart="27.5dp"
+                            android:text="88 - Seater"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="5dp"
+                        android:layout_weight="1">
+
+                        <TextView
+                            android:id="@+id/contractStatus"
+                            android:layout_width="150dp"
+                            android:layout_height="50dp"
+                            android:background="#F68B1F"
+                            android:textColor="#F2F1EF"
+                            android:gravity="center"
+                            android:text="Available"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:layout_marginBottom="5dp"
+                android:background="#59595A" />
+
+            <CheckBox
+                android:id="@+id/cb_hasAdditionalPickupPoints"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:clickable="false"
+                android:text="Has more than 1 Pick up Area" />
+
+            <CheckBox
+                android:id="@+id/cb_hasAdditionalDropOffPoints"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:clickable="false"
+                android:text="Has more than 1 Drop off Area" />
+
+            <Button
+                android:id="@+id/btnViewContractJobs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="Tap here to view more"
+                android:background="#F68B1F"/>
+
+            <Button
+                android:id="@+id/btnRemoveContractJob"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="Tap here to remove listing"
+                android:background="#F68B1F"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:layout_marginBottom="5dp"
+                android:background="#59595A" />
+
+        </LinearLayout>
+
+    </com.silencedut.expandablelayout.ExpandableLayout>
+
+</TableRow>

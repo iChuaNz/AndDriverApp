@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="sg.com.commute_solutions.bustracker.fragments.SettingsActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
+        android:id="@+id/info_form"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="10dp">
+        <ScrollView android:id="@+id/ScrollViewID"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:id="@+id/email_info_form"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!--Username-->
+                <TextView
+                    android:id="@+id/lbl_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="Username"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:paddingLeft="10dp" />
+
+                <TextView
+                    android:id="@+id/txt_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:paddingLeft="10dp" />
+
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/darker_gray" />
+
+                <!--Job Details-->
+                <TextView
+                    android:id="@+id/lbl_lastUpdateTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="Job Details:"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:paddingLeft="10dp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Last updated time: "
+                        android:paddingLeft="10dp"/>
+
+                    <TextView
+                        android:id="@+id/txt_lastUpdateTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
+                        android:paddingLeft="10dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_passengerlist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/txt_passenger_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
+                        android:paddingLeft="10dp" />
+
+                </LinearLayout>
+
+
+
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/darker_gray" />
+
+                <!-- Show Messages Toggle -->
+                <TextView
+                    android:id="@+id/txt_show_messages"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="@string/show_messages"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:paddingLeft="10dp" />
+
+                <Switch
+                    android:id="@+id/switch_show_messages"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:checked="false"
+                    android:paddingLeft="10dp" />
+
+                <View
+                    android:id="@+id/view_show_messages"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/darker_gray" />
+
+                <!-- Show Can ID Toggle -->
+                <TextView
+                    android:id="@+id/txt_show_CanID"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="@string/show_CanID"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:paddingLeft="10dp" />
+
+                <Switch
+                    android:id="@+id/switch_show_CanID"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:checked="false"
+                    android:paddingLeft="10dp" />
+
+                <View
+                    android:id="@+id/view_show_CanID"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/darker_gray" />
+
+                <!-- NFC Setting Spinner-->
+                <TextView
+                    android:id="@+id/txt_currentNFCSelection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:paddingLeft="10dp" />
+
+                <Button
+                    android:id="@+id/btn_chgNFCsettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Change Setting..."
+                    android:paddingBottom="10dp" />
+
+
+                <RadioGroup
+                    android:id="@+id/radio_nfc"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <RadioButton android:id="@+id/radio_nonfc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nonfc"
+                        android:onClick="onRadioButtonClicked"/>
+                    <RadioButton android:id="@+id/radio_internalnfc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/internalnfc"
+                        android:onClick="onRadioButtonClicked"/>
+                    <RadioButton android:id="@+id/radio_externalnfc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/externalnfc"
+                        android:onClick="onRadioButtonClicked"/>
+                    <RadioButton android:id="@+id/radio_usbreader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/usbreader"
+                        android:onClick="onRadioButtonClicked"/>
+                </RadioGroup>
+
+                <LinearLayout
+                    android:id="@+id/ll_connecteddevice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/lbl_connecteddevice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:paddingLeft="10dp"
+                        android:layout_weight="1"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_flomio_scan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/btn_scan"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <Button
+                        android:id="@+id/btn_disconnect"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="fill_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/darker_gray" />
+
+                <!--Version-->
+                <TextView
+                    android:id="@+id/lbl_version_no"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="Version"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:paddingLeft="10dp" />
+
+                <TextView
+                    android:id="@+id/txt_version_no"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:paddingLeft="10dp"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                <Button
+                    android:id="@+id/btn_logout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Logout"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <com.crystal.crystalpreloaders.widgets.CrystalPreloader
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:crs_pl_style="time_machine"
+        app:crs_pl_size="small"
+        app:crs_pl_fg_color="#F68B1F"
+        app:crs_pl_bg_color="#FFFFFF"/>
+
+</LinearLayout>
