@@ -6,8 +6,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -57,9 +57,7 @@ public class StartActivity extends AppCompatActivity {
             Log.d(LOG_TAG, loggedInUsername + "has logged in");
             String lastSavedState = prefs.getString(Preferences.CURRENTACTIVITY, "");
             if (StringUtil.deNull(lastSavedState).equalsIgnoreCase("map")) {
-                intent = new Intent(StartActivity.this, RouteActivity.class);
-            }if (StringUtil.deNull(lastSavedState).equalsIgnoreCase("route")) {
-                intent = new Intent(StartActivity.this, RouteActivity.class);
+                intent = new Intent(StartActivity.this, MapsActivity.class);
             }
 //            else if (StringUtil.deNull(lastSavedState).equalsIgnoreCase("settings")) {
 //                intent = new Intent(StartActivity.this, SettingsActivity.class);

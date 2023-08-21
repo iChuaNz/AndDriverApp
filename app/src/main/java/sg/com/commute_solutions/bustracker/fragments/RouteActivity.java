@@ -8,11 +8,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
@@ -443,7 +443,7 @@ public class RouteActivity extends AppCompatActivity {
                 jsonObject = obj.optJSONObject(Constants.DATA);
 
                 if (jsonObject != null) {
-                    Boolean success = jsonObject.optBoolean("success");
+                    boolean success = jsonObject.optBoolean("success");
                     if(success) {
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putString(Preferences.MANUAL_ACCESSCODE, accessCode);

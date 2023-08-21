@@ -3,27 +3,22 @@ package sg.com.commute_solutions.bustracker.fragments;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
-
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -32,25 +27,49 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
 import android.nfc.Tag;
-
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.StrictMode;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TableLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import android.location.Location;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.acs.bluetooth.BluetoothReader;
 import com.acs.bluetooth.BluetoothReader.OnAuthenticationCompleteListener;
@@ -62,78 +81,34 @@ import com.acs.bluetooth.BluetoothReaderGattCallback;
 import com.acs.bluetooth.BluetoothReaderGattCallback.OnConnectionStateChangeListener;
 import com.acs.bluetooth.BluetoothReaderManager;
 import com.acs.bluetooth.BluetoothReaderManager.OnReaderDetectionListener;
-
-import android.hardware.usb.UsbDevice;
-
 import com.acs.smartcard.Reader;
 import com.acs.smartcard.Reader.OnStateChangeListener;
-
-import com.github.clans.fab.FloatingActionMenu;
-import com.github.clans.fab.FloatingActionButton;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-
-import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AlertDialog;
-
-import android.text.Html;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-
-import android.view.animation.LinearInterpolator;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.Spinner;
-import android.widget.Switch;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
-import android.widget.LinearLayout;
-import android.widget.Toast;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-
-import android.util.Log;
 
 import sg.com.commute_solutions.bustracker.R;
 import sg.com.commute_solutions.bustracker.common.Constants;
@@ -142,12 +117,10 @@ import sg.com.commute_solutions.bustracker.data.Adhoc;
 import sg.com.commute_solutions.bustracker.data.Jobs;
 import sg.com.commute_solutions.bustracker.data.Passenger;
 import sg.com.commute_solutions.bustracker.data.Routes;
-import sg.com.commute_solutions.bustracker.fragments.charters.AvailableCharterActivity;
 import sg.com.commute_solutions.bustracker.service.BackgroundLocationService;
 import sg.com.commute_solutions.bustracker.service.GoogleServices;
 import sg.com.commute_solutions.bustracker.util.CEPAS.CEPASUtil;
 import sg.com.commute_solutions.bustracker.util.GPSUtil;
-import sg.com.commute_solutions.bustracker.util.LocationUtil;
 import sg.com.commute_solutions.bustracker.util.ObjectSerializer;
 import sg.com.commute_solutions.bustracker.util.StringUtil;
 import sg.com.commute_solutions.bustracker.webservices.WebServiceTask;
@@ -182,7 +155,7 @@ public class MapsActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private LatLng currentlatLng;
-    private Handler mHandler;
+    private static Handler mHandler;
 //    private float mDeclination;
 //    private float[] mRotationMatrix = new float[16];
 
@@ -209,18 +182,6 @@ public class MapsActivity extends AppCompatActivity
     private StartTripTask mStartTripTask = null;
     private EndTripTask mEndTripTask = null;
 
-    private FloatingActionMenu fabMenu;
-    private FloatingActionButton fabFollowsCamera;
-    private FloatingActionButton fabpickUpDropOff;
-    private FloatingActionButton fabSettings;
-    private FloatingActionButton fabRefresh;
-    private FloatingActionButton fabSendData;
-    private FloatingActionButton fabToChartering;
-    private FloatingActionButton fabViewJobDetails;
-    private FloatingActionButton fabViewDetails;
-    private FloatingActionButton fabScanQR;
-    private FloatingActionButton fabLogSheet;
-
     //    private AlertDialog loadingScreen;
     private FrameLayout popupWindow;
     private ImageButton btnClosePopup;
@@ -234,7 +195,6 @@ public class MapsActivity extends AppCompatActivity
     private boolean useInternalNFC = false;
     private boolean useUsbReader = false;
 
-    private Switch switchTracking;
     private String message;
     private boolean toSendLocation, isSchoolBus;
     private boolean toRefresh = true;
@@ -245,19 +205,14 @@ public class MapsActivity extends AppCompatActivity
     private int routeID = 0;
     private ArrayList<Boolean> isDropOffArray;
 
-    //    private int maxVolume, sound;
+//    private int maxVolume, sound;
 //    private SoundPool soundPool;
     private boolean enableInternalNFC, enableExternalNFC;
     private boolean isShareTransport, isAdhoc;
-    Double latitude, longitude, altitude;
-    float accuracy, speed;
-    Geocoder geocoder;
-    public BackgroundLocationService gpsService;
-    public boolean mTracking = false;
 
     private Adhoc adhocJob;
 
-    //    private final String[][] techList = new String[][] {
+//    private final String[][] techList = new String[][] {
 //            new String[] {
 //                    NfcA.class.getName(),
 //                    NfcB.class.getName(),
@@ -288,12 +243,12 @@ public class MapsActivity extends AppCompatActivity
     private PolylineOptions busRoute;
     private MarkerOptions jobMarker, timeMarker, mCurrentPositionLogo;
     private Marker currentPosition;
-    //    private CircleOptions mCircle;
+//    private CircleOptions mCircle;
     private final ContentValues authenticationToken = new ContentValues();
     private ContentValues contentValues;
     private final ArrayList<ContentValues> passengerRecords = new ArrayList<>();
 
-    private byte masterKey[];
+    private byte[] masterKey;
     private boolean isAuthenticated = false;
     private boolean hasSentApdu1 = false;
     private int searchingDeviceCount = 0;
@@ -425,9 +380,9 @@ public class MapsActivity extends AppCompatActivity
             BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
             String deviceAddress = prefs.getString(Preferences.BLUETOOTH_DEVICE_ADDRESS, "");
             try {
-                String masterKeyHexString = StringUtil.toHexString(Constants.DEFAULT_MASTER_KEY.getBytes("UTF-8"));
+                String masterKeyHexString = StringUtil.toHexString(Constants.DEFAULT_MASTER_KEY.getBytes(StandardCharsets.UTF_8));
                 masterKey = StringUtil.getText2HexBytes(masterKeyHexString);
-            } catch (UnsupportedEncodingException e) {
+            } catch (Exception e){
                 e.printStackTrace();
             }
 
@@ -561,7 +516,7 @@ public class MapsActivity extends AppCompatActivity
             preferredProtocols |= Reader.PROTOCOL_T0;
             preferredProtocols |= Reader.PROTOCOL_T1;
             // Register receiver for USB permission
-            mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(Constants.ACTION_USB_PERMISSION), 0);
+            mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(Constants.ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
             IntentFilter filter = new IntentFilter();
             filter.addAction(Constants.ACTION_USB_PERMISSION);
             filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
@@ -621,38 +576,13 @@ public class MapsActivity extends AppCompatActivity
         ivNFCConnectionStatus.invalidate();
         popupWindow = (FrameLayout) findViewById(R.id.fl_popupWindow);
         btnClosePopup = (ImageButton) findViewById(R.id.btn_closePopup);
-        switchTracking = (Switch) findViewById(R.id.switch_tracking);
         passengerList = (TableLayout) findViewById(R.id.table_passengerList);
 
         popupWindow.setAlpha(0.8f);
 
-        fabMenu = (FloatingActionMenu) findViewById(R.id.fab_menu);
-        fabFollowsCamera = (FloatingActionButton) findViewById(R.id.fab_followCamera);
-        fabpickUpDropOff = (FloatingActionButton) findViewById(R.id.fab_pickUp_DropOff);
-        fabSettings = (FloatingActionButton) findViewById(R.id.fab_settings);
-        fabRefresh = (FloatingActionButton) findViewById(R.id.fab_refresh);
-        fabLogSheet = (FloatingActionButton) findViewById(R.id.fab_log_sheet);
-        fabSendData = (FloatingActionButton) findViewById(R.id.fab_sendData);
-        fabViewDetails = (FloatingActionButton) findViewById(R.id.fab_viewDetails);
-        fabViewJobDetails = (FloatingActionButton) findViewById(R.id.fab_viewJobDetails);
-        fabToChartering = (FloatingActionButton) findViewById(R.id.fab_toChartering);
-        fabScanQR = (FloatingActionButton) findViewById(R.id.fab_scanQR);
+        FloatingActionButton fabSettings = findViewById(R.id.fab_settings);
         imgPhone = (ImageView) findViewById(R.id.imgPhone);
         imgBackground = (ImageView) findViewById(R.id.imgBackground);
-
-
-        fabMenu.setIconAnimated(false);
-        fabMenu.setMenuButtonColorNormal(Color.parseColor("#F68B1F"));
-        fabFollowsCamera.setColorNormal(Color.parseColor("#F68B1F"));
-        fabpickUpDropOff.setColorNormal(Color.parseColor("#F68B1F"));
-        fabSettings.setColorNormal(Color.parseColor("#F68B1F"));
-        fabRefresh.setColorNormal(Color.parseColor("#F68B1F"));
-        fabToChartering.setColorNormal(Color.parseColor("#F68B1F"));
-        fabSendData.setColorNormal(Color.parseColor("#F68B1F"));
-        fabViewJobDetails.setColorNormal(Color.parseColor("#F68B1F"));
-        fabViewDetails.setColorNormal(Color.parseColor("#F68B1F"));
-        fabScanQR.setColorNormal(Color.parseColor("#F68B1F"));
-        fabLogSheet.setColorNormal(Color.parseColor("#F68B1F"));
 
         ezlink = new ProcessEzlink();
         txtResult = (TextView) findViewById(R.id.txt_passenger_name);
@@ -680,24 +610,8 @@ public class MapsActivity extends AppCompatActivity
             isBA = true;
         }
 
-        if (toSendLocation) {
-            switchTracking.setChecked(true);
-        } else {
-            switchTracking.setChecked(false);
-        }
-
         if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-            switchTracking.setTextOff("关");
-            switchTracking.setTextOn("开");
 
-            fabFollowsCamera.setLabelText("地图 - 自动");
-            fabSettings.setLabelText("设置");
-            fabRefresh.setLabelText("重新加载");
-            fabSendData.setLabelText("发送数据");
-            fabViewDetails.setLabelText("查看详情");
-            fabViewJobDetails.setLabelText("查看包车详情");
-            fabToChartering.setLabelText("去包车菜单");
-            fabScanQR.setLabelText("掃描");
             btnEnd.setText("完成工作");
         }
         int permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
@@ -736,102 +650,6 @@ public class MapsActivity extends AppCompatActivity
 
         editor.putBoolean(Preferences.ON_OFF_TRACKER, true);
         editor.apply();
-        switchTracking.setChecked(true);
-        switchTracking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        toast(Constants.IS_SEND_LOCATION);
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        toast(Constants.IS_SEND_LOCATION_CH);
-                    }
-                    editor.putBoolean(Preferences.ON_OFF_TRACKER, true);
-                    editor.apply();
-                    if (toRefresh) {
-                        refreshActivity();
-                    }
-                    startMyService();
-                } else {
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        if (boardingList.size() == 0 || boardingList.isEmpty()) {
-                            builder.setMessage(Constants.STOP_POLLING_CONFIRMATION)
-                                    .setTitle("Stop polling?")
-                                    .setCancelable(false)
-                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                            stopLocationUpdates();
-                                            toast(Constants.NOT_SEND_LOCATION);
-                                            editor.putBoolean(Preferences.ON_OFF_TRACKER, false);
-                                            editor.apply();
-                                        }
-                                    })
-                                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            toRefresh = false;
-                                            switchTracking.setChecked(true);
-                                            dialog.dismiss();
-                                        }
-                                    }).show();
-                        } else {
-                            builder.setMessage(Constants.ON_PASSENGER_LIST_FULL_ALERT)
-                                    .setCancelable(false)
-                                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            toRefresh = false;
-                                            switchTracking.setChecked(true);
-                                            dialog.dismiss();
-                                        }
-                                    }).show();
-                        }
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        if (boardingList.size() == 0 || boardingList.isEmpty()) {
-                            builder.setMessage(Constants.STOP_POLLING_CONFIRMATION_CH)
-                                    .setCancelable(false)
-                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                            stopLocationUpdates();
-                                            toast(Constants.NOT_SEND_LOCATION_CH);
-                                            editor.putBoolean(Preferences.ON_OFF_TRACKER, false);
-                                            editor.apply();
-                                            refreshActivity();
-                                        }
-                                    })
-                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            toRefresh = false;
-                                            switchTracking.setChecked(true);
-                                            dialog.dismiss();
-                                        }
-                                    }).show();
-                        } else {
-                            builder.setMessage(Constants.ON_PASSENGER_LIST_FULL_ALERT_CH)
-                                    .setCancelable(false)
-                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            toRefresh = false;
-                                            switchTracking.setChecked(true);
-                                            dialog.dismiss();
-                                        }
-                                    }).show();
-                        }
-                    }
-                    if (!switchTracking.isChecked()) {
-                        stopMyService();
-                    }
-                }
-                toSendLocation = prefs.getBoolean(Preferences.ON_OFF_TRACKER, false);
-            }
-        });
-
 
         btnEnd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -851,7 +669,6 @@ public class MapsActivity extends AppCompatActivity
                                         editor.putBoolean(Preferences.ON_OFF_TRACKER, false);
                                         editor.putString(Preferences.MANUAL_ACCESSCODE, "");
                                         editor.commit();
-                                        backToRoute();
                                         editor.apply();
                                     }
                                 })
@@ -859,7 +676,6 @@ public class MapsActivity extends AppCompatActivity
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         toRefresh = false;
-                                        switchTracking.setChecked(true);
                                         isTrack = true;
                                         dialog.dismiss();
                                     }
@@ -871,7 +687,6 @@ public class MapsActivity extends AppCompatActivity
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         toRefresh = false;
-                                        switchTracking.setChecked(true);
                                         isTrack = true;
                                         dialog.dismiss();
                                     }
@@ -891,9 +706,7 @@ public class MapsActivity extends AppCompatActivity
                                         editor.putBoolean(Preferences.ON_OFF_TRACKER, false);
                                         editor.putString(Preferences.MANUAL_ACCESSCODE, "");
                                         editor.commit();
-                                        backToRoute();
                                         editor.apply();
-                                        switchTracking.setChecked(false);
 
                                         refreshActivity();
                                     }
@@ -902,7 +715,6 @@ public class MapsActivity extends AppCompatActivity
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         toRefresh = false;
-                                        switchTracking.setChecked(true);
                                         dialog.dismiss();
                                         isTrack = true;
                                     }
@@ -914,7 +726,6 @@ public class MapsActivity extends AppCompatActivity
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         toRefresh = false;
-                                        switchTracking.setChecked(true);
                                         dialog.dismiss();
                                         isTrack = true;
                                     }
@@ -954,47 +765,19 @@ public class MapsActivity extends AppCompatActivity
 //            startActivity(intent);
 //        }
 
-        if (!isAdhoc) {
-            fabViewJobDetails.setVisibility(View.GONE);
-        }
-
-        if (!isSchoolBus) {
-            fabViewDetails.setVisibility(View.GONE);
-            fabpickUpDropOff.setVisibility(View.GONE);
-        }
-
-        if (isOMO) {
-            fabToChartering.setVisibility(View.VISIBLE);
-        }
-        if (isBA) {
-            fabSendData.setVisibility(View.GONE);
-            fabpickUpDropOff.setVisibility(View.GONE);
-            fabRefresh.setVisibility(View.GONE);
-            fabScanQR.setVisibility(View.VISIBLE);
-        } else {
-            fabScanQR.setVisibility(View.VISIBLE);
-        }
-
-        fabFollowsCamera.setOnClickListener(clickListener);
-        fabpickUpDropOff.setOnClickListener(clickListener);
-        fabSettings.setOnClickListener(clickListener);
-        fabRefresh.setOnClickListener(clickListener);
-        fabSendData.setOnClickListener(clickListener);
-        fabToChartering.setOnClickListener(clickListener);
-        fabViewJobDetails.setOnClickListener(clickListener);
-        fabViewDetails.setOnClickListener(clickListener);
-        fabScanQR.setOnClickListener(clickListener);
-        fabLogSheet.setOnClickListener(clickListener);
+        fabSettings.setOnClickListener(v -> {
+            sendPassengerListForToday();
+            Intent intent = new Intent(MapsActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
 
         txtJobStatus = (TextView) findViewById(R.id.txt_jobStatus);
         btnStartTrip = (ImageView) findViewById(R.id.btn_starttrip);
         btnEndTrip = (ImageView) findViewById(R.id.btn_endtrip);
         txtBoardingCode = (TextView) findViewById(R.id.txt_boardingCode);
         txtFourDigit = (TextView) findViewById(R.id.txt_fourDigit);
-        fabLogSheet.setVisibility(View.GONE);
         if (isAdhoc) {
 
-            fabLogSheet.setVisibility(View.VISIBLE);
             txtJobStatus.setVisibility(View.VISIBLE);
             int jobStatus = adhocJob.getJobStatus();
             switch (jobStatus) {
@@ -1062,7 +845,6 @@ public class MapsActivity extends AppCompatActivity
                                             public void onClick(DialogInterface dialog, int which) {
                                                 mEndTripTask = new EndTripTask(adhocJob.getId(), false);
                                                 mEndTripTask.execute((Void) null);
-                                                stopMyService();
                                             }
                                         })
                                         .setNeutralButton("No-Passenger did not show up", new DialogInterface.OnClickListener() {
@@ -1070,7 +852,6 @@ public class MapsActivity extends AppCompatActivity
                                             public void onClick(DialogInterface dialog, int which) {
                                                 mEndTripTask = new EndTripTask(adhocJob.getId(), true);
                                                 mEndTripTask.execute((Void) null);
-                                                stopMyService();
                                             }
                                         })
                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -1094,7 +875,6 @@ public class MapsActivity extends AppCompatActivity
                                             public void onClick(DialogInterface dialog, int which) {
                                                 mEndTripTask = new EndTripTask(adhocJob.getId(), false);
                                                 mEndTripTask.execute((Void) null);
-                                                stopMyService();
                                             }
                                         })
                                         .setNeutralButton("No-Passenger did not show up", new DialogInterface.OnClickListener() {
@@ -1102,7 +882,6 @@ public class MapsActivity extends AppCompatActivity
                                             public void onClick(DialogInterface dialog, int which) {
                                                 mEndTripTask = new EndTripTask(adhocJob.getId(), true);
                                                 mEndTripTask.execute((Void) null);
-                                                stopMyService();
                                             }
                                         })
                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -1157,12 +936,7 @@ public class MapsActivity extends AppCompatActivity
                     break;
             }
         }
-
-        if (switchTracking.isChecked()) {
-            startMyService();
-        } else {
-            stopMyService();
-        }
+        startMyService();
     }
 
     @Override
@@ -1302,7 +1076,7 @@ public class MapsActivity extends AppCompatActivity
             // Unregister receiver
             unregisterReceiver(mReceiver);
         }
-        //stopPollingLocation();
+        stopPollingLocation();
         stopCheckingProximity();
     }
 
@@ -2071,15 +1845,6 @@ public class MapsActivity extends AppCompatActivity
 //        }
     }
 
-    private void backToRoute(){
-        if (!isTrack) {
-            stopMyService();
-            Intent intent = new Intent(context, RouteActivity.class);
-            startActivity(intent);
-            finish();
-        }
-    }
-
     private void stopMyService() {
         stopPollingLocation();
 //        mLocationService = new GoogleServices();
@@ -2282,6 +2047,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CHECK_BLUETOOTH_ON) {
             // Make sure the request was successful
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -2332,7 +2098,7 @@ public class MapsActivity extends AppCompatActivity
                     Toast.makeText(context, "请打开GPS。", Toast.LENGTH_SHORT).show();
                 }
 
-                startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
+                startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
             } else {
                 //do nothing
             }
@@ -2646,292 +2412,6 @@ public class MapsActivity extends AppCompatActivity
         }
     }
 
-    private View.OnClickListener clickListener = new View.OnClickListener() {
-        Intent intent;
-
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.fab_followCamera:
-                    if (followUser) {
-                        followUser = false;
-                        fabFollowsCamera.setLabelText("Camera - Manual");
-                        if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                            fabFollowsCamera.setLabelText("Camera - Manual");
-                            toast("Camera - Manual");
-                        } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                            fabFollowsCamera.setLabelText("地图 - 手动");
-                            toast("手动地图");
-                        }
-                    } else {
-                        followUser = true;
-
-                        if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                            fabFollowsCamera.setLabelText("Camera - Automatic");
-                            toast("Camera - Automatic.");
-                        } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                            fabFollowsCamera.setLabelText("地图 - 自动");
-                            toast("自动地图");
-                        }
-                    }
-                case R.id.fab_pickUp_DropOff:
-                    if (isDropOff) {
-                        fabpickUpDropOff.setLabelText("Pick Up");
-                        isDropOff = false;
-                    } else {
-                        fabpickUpDropOff.setLabelText("Drop Off");
-                        isDropOff = true;
-                    }
-                    break;
-                case R.id.fab_settings:
-                    sendPassengerListForToday();
-                    intent = new Intent(MapsActivity.this, SettingsActivity.class);
-                    startActivity(intent);
-                    break;
-                case R.id.fab_refresh:
-                    reloadJob();
-                    break;
-                case R.id.fab_sendData:
-                    if (boardingList.isEmpty()) {
-                        if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                            toast(Constants.NO_PASSENGER_IN_LIST);
-                        } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                            toast(Constants.NO_PASSENGER_IN_LIST_CH);
-                        }
-                    }
-                    sendPassengerListForToday();
-                    break;
-                case R.id.fab_viewDetails:
-                    TableRow.LayoutParams lp = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT);
-                    ArrayList<String> canIdList = new ArrayList<>();
-                    popupWindow.setVisibility(View.VISIBLE);
-                    passengerList.removeAllViews();
-                    fabMenu.close(true);
-
-                    for (int i = 0; i < passengers.size(); i++) {
-//                        TableRow row1 = new TableRow(context);
-//                        row1.setLayoutParams(lp);
-//
-//                        try {
-//                            String imageLink = passengers.get(i).getPicUrl();
-//                            URL imageURL = new URL(imageLink);
-//                            Bitmap bmp = BitmapFactory.decodeStream(imageURL.openConnection().getInputStream());
-//                            ImageView photo = new ImageView(context);
-//                            photo.setImageBitmap(bmp);
-//                            row1.addView(photo);
-//                        } catch (Exception e) {
-//                            TextView photo = new TextView(context);
-//                            photo.setText("Unable to load photo");
-//                            photo.setTextColor(Color.RED);
-//                            row1.addView(photo);
-//                        }
-//                        passengerList.addView(row1);
-
-                        boolean isOnBoard = false;
-                        for (int j = 0; j < boardListNoClearing.size(); j++) {
-                            if (passengers.get(i).getEzlinkCanId().equalsIgnoreCase(boardListNoClearing.get(j).getEzlinkCanId())) {
-                                isOnBoard = true;
-                            }
-                            if (!canIdList.contains(boardListNoClearing.get(j).getEzlinkCanId())) {
-                                canIdList.add(boardListNoClearing.get(j).getEzlinkCanId());
-                            }
-                        }
-
-                        TableRow row2 = new TableRow(context);
-                        row2.setLayoutParams(lp);
-
-                        TextView name = new TextView(context);
-                        if (isOnBoard) {
-                            String text = "<b>Name: </b>" + passengers.get(i).getName() + "                    ✔ ";
-                            name.setText(Html.fromHtml(text));
-                            row2.setBackgroundColor(Color.GREEN);
-                        } else {
-                            String text = "<b>Name: </b>" + passengers.get(i).getName();
-                            name.setText(Html.fromHtml(text));
-                        }
-                        name.setTextColor(Color.BLACK);
-                        row2.addView(name);
-                        passengerList.addView(row2);
-
-//                        TableRow row3 = new TableRow(context);
-//                        row3.setLayoutParams(lp);
-//
-//                        TextView nokName = new TextView(context);
-//                        text = "<b>Next of Kin: </b>" + passengers.get(i).getNokName();
-//                        nokName.setText(Html.fromHtml(text));
-//                        nokName.setTextColor(Color.BLACK);
-//                        row3.addView(nokName);
-//                        passengerList.addView(row3);
-
-//                        TableRow row4 = new TableRow(context);
-//                        row4.setLayoutParams(lp);
-//
-//                        TextView nokContact = new TextView(context);
-//                        final String number = passengers.get(i).getNokContact();
-//                        text = "<b>Next of Kin Contact No.: </b><u>" + passengers.get(i).getNokContact() + "</u>";
-//                        nokContact.setText(Html.fromHtml(text));
-//                        nokContact.setTextColor(Color.BLACK);
-//
-//                        nokContact.setOnClickListener(new OnClickListener() {
-//                            @Override
-//                            public void onClick(View v) {
-//                                Intent callIntent = new Intent(Intent.ACTION_CALL);
-//                                callIntent.setData(Uri.parse("tel:"+ number));
-//                                try {
-//                                    startActivity(callIntent);
-//                                } catch (Exception e) {
-//                                    //do nothing
-//                                }
-//                            }
-//                        });
-//                        row4.addView(nokContact);
-//                        passengerList.addView(row4);
-
-//                        TableRow row5 = new TableRow(context);
-//                        row5.setLayoutParams(lp);
-//
-//                        TextView nokRs = new TextView(context);
-//                        text = "<b>Next of Kin Relationship: </b>" + passengers.get(i).getNokRelationship();
-//                        nokRs.setText(Html.fromHtml(text));
-//                        nokRs.setTextColor(Color.BLACK);
-//                        row5.addView(nokRs);
-//                        passengerList.addView(row5);
-
-//                        TableRow row6 = new TableRow(context);
-//                        row6.setLayoutParams(lp);
-//
-//                        final String addOnCanId = passengers.get(i).getEzlinkCanId();
-//                        btnAddtoTodayList = new Button(context);
-//                        btnAddtoTodayList.setText("Add to Today's List");
-//                        btnAddtoTodayList.setOnClickListener(new OnClickListener() {
-//                            @Override
-//                            public void onClick(View v) {
-//                                checkPassengerList(addOnCanId, false);
-//                                toast("Added");
-//                            }
-//                        });
-//                        row6.addView(btnAddtoTodayList);
-//                        passengerList.addView(row6);
-
-                        TableRow row7 = new TableRow(context);
-                        row7.setLayoutParams(lp);
-
-                        TextView bufferLine = new TextView(context);
-                        bufferLine.setText("----------------------------------------------------------------------");
-                        bufferLine.setTextColor(Color.BLACK);
-                        row7.addView(bufferLine);
-                        passengerList.addView(row7);
-
-                    }
-                    TableRow row8 = new TableRow(context);
-                    row8.setLayoutParams(lp);
-
-                    //TextView attendanceList = new TextView(context);
-                    //String aString = "<br/><b>Passengers on Board: " + canIdList.size() + "/" + passengers.size() + "</b>";
-                    //attendanceList.setText(Html.fromHtml(aString));
-                    //attendanceList.setTextColor(Color.BLACK);
-                    //row8.addView(attendanceList);
-                    //passengerList.addView(row8);
-                    break;
-                case R.id.fab_viewJobDetails:
-                    String pickupPointName = "";
-                    String dropOffPointName = "";
-                    String timeInString = "";
-                    double pickUpLat = 0.0;
-                    double pickUpLng = 0.0;
-                    for (int i = 0; i < jobMarkerList.size(); i++) {
-                        if (jobs.get(i).getType() == 1) {
-                            dropOffPointName = jobs.get(i).getPointName();
-                        } else if (jobs.get(i).getType() == 0) {
-                            if (pickupPointName.equalsIgnoreCase("")) {
-                                pickupPointName = jobs.get(i).getPointName();
-                                timeInString = jobs.get(i).getTime();
-                                pickUpLat = jobs.get(i).getLatitude();
-                                pickUpLng = jobs.get(i).getLongitude();
-                            }
-                        }
-                    }
-
-                    String messageString = "You have an adhoc job from " + pickupPointName + " to " + dropOffPointName + " @" + timeInString;
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    final double finalPickUpLat = pickUpLat;
-                    final double finalPickUpLng = pickUpLng;
-
-                    if (adhocJob.getPocContactNo().equalsIgnoreCase("") || adhocJob.getPocContactNo().isEmpty()) {
-                        builder.setTitle("Job Details")
-                                .setMessage(messageString)
-                                .setCancelable(false)
-                                .setPositiveButton("I need help to get to " + pickupPointName, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Uri gmmIntentUri = Uri.parse("google.navigation:q=" + finalPickUpLat + ",+" + finalPickUpLng + "&avoid=tf");
-                                        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                                        mapIntent.setPackage("com.google.android.apps.maps");
-                                        startActivity(mapIntent);
-                                    }
-                                })
-                                .setNegativeButton("Back to tracker", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                }).show();
-                    } else {
-                        builder.setTitle("Job Details")
-                                .setMessage(messageString)
-                                .setCancelable(false)
-                                .setPositiveButton("I need help to get to " + pickupPointName, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Uri gmmIntentUri = Uri.parse("google.navigation:q=" + finalPickUpLat + ",+" + finalPickUpLng + "&avoid=tf");
-                                        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                                        mapIntent.setPackage("com.google.android.apps.maps");
-                                        startActivity(mapIntent);
-                                    }
-                                })
-                                .setNeutralButton("Contact POC - " + adhocJob.getPocName(), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent call = new Intent(Intent.ACTION_DIAL);
-                                        call.setData(Uri.parse("tel:" + adhocJob.getPocContactNo()));
-                                        startActivity(call);
-                                        dialog.dismiss();
-                                    }
-                                })
-                                .setNegativeButton("Back to tracker", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                }).show();
-                    }
-                    break;
-                case R.id.fab_toChartering:
-                    intent = new Intent(context, AvailableCharterActivity.class);
-                    stopCheckingProximity();
-                    stopPollingLocation();
-                    stopLocationUpdates();
-                    startActivity(intent);
-                    finish();
-                    break;
-                case R.id.fab_scanQR:
-
-                    final SharedPreferences.Editor editor = prefs.edit();
-                    editor.putInt(Preferences.ROUTE_ID, routeID);
-                    editor.apply();
-                    intent = new Intent(context, ScannerActivity.class);
-                    startActivity(intent);
-                    finish();
-                    break;
-                case R.id.fab_log_sheet:
-                    intent = new Intent(context, LogSheetActivity.class);
-                    startActivity(intent);
-                    finish();
-                    break;
-            }
-        }
-    };
-
     private void sendPassengerListForToday() {
         if (boardingList.isEmpty()) {
             Log.d(LOG_TAG, Constants.NO_PASSENGER_IN_LIST);
@@ -3117,7 +2597,6 @@ public class MapsActivity extends AppCompatActivity
 //            Boolean isSuccessful = false;
             if (!hasError(obj)) {
 
-                Log.d(LOG_TAG, obj.toString());
                 JSONObject objPx;
                 jsonObject = obj.optJSONObject(Constants.DATA);
 
@@ -3566,9 +3045,9 @@ public class MapsActivity extends AppCompatActivity
 
             for (int i = 0; i < count; i++) {
                 obj = WebServiceUtils.requestJSONObject(Constants.LOCATION_URL, WebServiceUtils.METHOD.POST, authenticationToken, contentValues);
+                Log.d(LOG_TAG, "Attempt " + (i + 1) + "::" + (obj == null ? "null" : obj.toString()));
                 if (obj != null) {
                     jsonObject = obj.optJSONObject("data");
-                    Log.d(LOG_TAG, "Attempt " + (i + 1) + "::" + obj.toString());
                     if ((jsonObject.optString(Constants.BUS_CHARTER_MESSAGE).equalsIgnoreCase("Updated"))) {
                         editor.putString(Preferences.LAST_UPDATED_TIME, lastUpdatedDate);
                         editor.apply();
@@ -3581,7 +3060,7 @@ public class MapsActivity extends AppCompatActivity
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                         toast(Constants.RETRY_MESSAGE3_CH);
                     }
-                    displayNetworkErrorMessage();
+//                    displayNetworkErrorMessage();
                 }
             }
             return false;

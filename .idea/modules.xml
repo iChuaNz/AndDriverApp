@@ -2,10 +2,13 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/acsbt-1.0.0/acsbt-1.0.0.iml" filepath="$PROJECT_DIR$/acsbt-1.0.0/acsbt-1.0.0.iml" group="driverapp/acsbt-1.0.0" />
-      <module fileurl="file://$PROJECT_DIR$/acssmc-1.1.3/acssmc-1.1.3.iml" filepath="$PROJECT_DIR$/acssmc-1.1.3/acssmc-1.1.3.iml" group="driverapp/acssmc-1.1.3" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="driverapp/app" />
-      <module fileurl="file://$PROJECT_DIR$/driverapp.iml" filepath="$PROJECT_DIR$/driverapp.iml" group="driverapp" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/AndDriverApp.iml" filepath="$PROJECT_DIR$/.idea/AndDriverApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/acsbt-1.0.0/AndDriverApp.acsbt-1.0.0.iml" filepath="$PROJECT_DIR$/.idea/modules/acsbt-1.0.0/AndDriverApp.acsbt-1.0.0.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/acssmc-1.1.3/AndDriverApp.acssmc-1.1.3.iml" filepath="$PROJECT_DIR$/.idea/modules/acssmc-1.1.3/AndDriverApp.acssmc-1.1.3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AndDriverApp.app.unitTest.iml" />
     </modules>
   </component>
 </project>

@@ -119,11 +119,11 @@
                 android:textSize="13sp"
                 android:paddingStart="5dp"
                 android:gravity="center|left"
-                android:maxLines="1"
                 android:ellipsize="none"
                 android:text="Adhoc_88888888"
                 android:layout_weight="1"
-                android:scrollHorizontally="false" />
+                android:scrollHorizontally="false"
+                android:singleLine="true" />
 
             <TextView
                 android:id="@+id/txt_charter_cost"
@@ -132,11 +132,11 @@
                 android:textSize="13sp"
                 android:paddingStart="5dp"
                 android:gravity="center|left"
-                android:maxLines="1"
                 android:ellipsize="none"
                 android:text="$88888.88"
                 android:layout_weight="1"
-                android:scrollHorizontally="false" />
+                android:scrollHorizontally="false"
+                android:singleLine="true" />
 
             <TextView
                 android:id="@+id/txt_charter_details"

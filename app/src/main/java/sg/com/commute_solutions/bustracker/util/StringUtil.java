@@ -153,7 +153,7 @@ public class StringUtil {
         String command = text.replace(" ", "").replace("\n", "");
 
         if (command.isEmpty() || command.length() % 2 != 0
-                || isHexNumber(command) == false) {
+                || !isHexNumber(command)) {
             return null;
         }
 

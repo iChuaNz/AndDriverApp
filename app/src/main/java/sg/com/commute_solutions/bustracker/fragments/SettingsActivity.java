@@ -23,7 +23,7 @@ import android.os.Bundle;
 import android.os.Handler;
 
 import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -436,6 +436,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CHECK_BLUETOOTH_ON) {
             // Make sure the request was successful
             if (resultCode != RESULT_OK) {

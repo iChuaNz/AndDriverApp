@@ -119,6 +119,7 @@
     <string name="cost">Cost Per Month</string>
     <string name="service_already_running">Service is already running</string>
     <string name="service_start_successfully">Service start successfully</string>
+    <string name="end_trip">END TRIP</string>
     <string-array name="busTypeArray">
         <item>11-Seater</item>
         <item>13-Seater</item>

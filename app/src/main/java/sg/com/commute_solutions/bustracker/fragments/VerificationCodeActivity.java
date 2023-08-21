@@ -5,11 +5,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -51,8 +55,8 @@ public class VerificationCodeActivity extends AppCompatActivity {
     private Context context;
 
     private FrameLayout flSelection;
-    private String selection;
-    private Button btnNext, btnSelectionNext;
+    private String selection = "";
+    private Button btnNext;
     private ImageView btnLanguage;
     private String driverRole, isValidMobile;
     private JSONObject obj, jsonObject;
@@ -64,7 +68,6 @@ public class VerificationCodeActivity extends AppCompatActivity {
         mCodeProgressBar = (ProgressBar) findViewById(R.id.codeProgressBar);
         mSixDigitCodeView = (EditText) findViewById(R.id.sixDigitCode);
         btnNext = (Button) findViewById(R.id.btnNext);
-        btnSelectionNext = (Button) findViewById(R.id.btn_Next);
         btnLanguage = (ImageView) findViewById(R.id.btn_language);
         flSelection = (FrameLayout) findViewById(R.id.fl_popupSelection);
         flSelection.setAlpha(0.8f);
@@ -111,12 +114,6 @@ public class VerificationCodeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 attempVerifyCode();
-            }
-        });
-        btnSelectionNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                launchNextActivity();
             }
         });
         if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
@@ -191,30 +188,6 @@ public class VerificationCodeActivity extends AppCompatActivity {
                             .show();
                 }
             });
-        }
-    }
-
-    private void launchNextActivity() {
-        if (selection.equalsIgnoreCase("tracking")) {
-            if (!GPSUtil.isLocationEnabled(context)) {
-                intent = new Intent(getApplicationContext(), StartActivity.class);
-                startActivity(intent);
-                finish();
-            } else {
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean(Preferences.IS_FIRST_TIME, false);
-                editor.remove(Preferences.PASSENGERLIST);
-                editor.apply();
-                intent = new Intent(getApplicationContext(), RouteActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        } else if (selection.equalsIgnoreCase("chartering")) {
-            intent = new Intent(getApplicationContext(), NewCharterActivity.class);
-            startActivity(intent);
-            finish();
-        } else {
-            //do nothing
         }
     }
 
@@ -312,7 +285,7 @@ public class VerificationCodeActivity extends AppCompatActivity {
                     String authToken = jsonObject.optString(Constants.TOKEN);
                     editor.putString(Preferences.LOGGED_IN_USERNAME, jsonObject.optString(Constants.USERNAME));
                     editor.putString(Preferences.LOGGED_IN_VEHICLENO, jsonObject.optString(Constants.LOGINVEHICLENO));
-                    editor.putString(Preferences.AUTH_TOKEN, jsonObject.optString(Constants.TOKEN));
+                    editor.putString(Preferences.AUTH_TOKEN, authToken);
                     editor.putString(Preferences.ROLE, driverRole);
                     editor.putBoolean(Preferences.IS_FIRST_TIME, true);
                     editor.commit();
@@ -335,29 +308,7 @@ public class VerificationCodeActivity extends AppCompatActivity {
             if (driverRole == null) {
                 onFailedAttempt();
             } else {
-                if (driverRole.equalsIgnoreCase("OMO")) {
-                    mCodeProgressBar.setVisibility(View.GONE);
-                    flSelection.setVisibility(View.VISIBLE);
-                } else if (driverRole.equalsIgnoreCase("driver") || driverRole.equalsIgnoreCase("ba")) {
-                    Intent intent;
-                    if (!GPSUtil.isLocationEnabled(context)) {
-                        intent = new Intent(context, StartActivity.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putBoolean(Preferences.IS_FIRST_TIME, false);
-                        editor.remove(Preferences.PASSENGERLIST);
-                        editor.apply();
-                        intent = new Intent(context, RouteActivity.class);
-                        startActivity(intent);
-                        finish();
-                    }
-                } else if (driverRole.equalsIgnoreCase("admin")) {
-                    Intent intent = new Intent(context, AvailableCharterActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
+                goToMapActivity();
             }
         }
 
@@ -365,6 +316,36 @@ public class VerificationCodeActivity extends AppCompatActivity {
         public void onFailedAttempt() {
             mCodeProgressBar.setVisibility(View.GONE);
             displayErrorMessage();
+        }
+    }
+    private void goToMapActivity() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    1);
+        }else {
+            if (!GPSUtil.isLocationEnabled(context)) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+                if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                    builder.setMessage(Constants.GPS_OFF_CH)
+                            .setTitle("Error!")
+                            .setCancelable(true).show();
+                } else {
+                    builder.setMessage(Constants.GPS_OFF)
+                            .setTitle("Error!")
+                            .setCancelable(true).show();
+                }
+            } else {
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean(Preferences.IS_FIRST_TIME, false);
+                editor.remove(Preferences.PASSENGERLIST);
+                editor.apply();
+                intent = new Intent(getApplicationContext(), MapsActivity.class);
+                startActivity(intent);
+                finish();
+            }
         }
     }
 }
