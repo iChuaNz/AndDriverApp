@@ -29,7 +29,6 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.location.Geocoder;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -117,7 +116,6 @@ import sg.com.commute_solutions.bustracker.data.Adhoc;
 import sg.com.commute_solutions.bustracker.data.Jobs;
 import sg.com.commute_solutions.bustracker.data.Passenger;
 import sg.com.commute_solutions.bustracker.data.Routes;
-import sg.com.commute_solutions.bustracker.service.BackgroundLocationService;
 import sg.com.commute_solutions.bustracker.service.GoogleServices;
 import sg.com.commute_solutions.bustracker.util.CEPAS.CEPASUtil;
 import sg.com.commute_solutions.bustracker.util.GPSUtil;
@@ -187,7 +185,7 @@ public class MapsActivity extends AppCompatActivity
     private ImageButton btnClosePopup;
     private ImageView imgPhone, imgBackground;
     private TableLayout passengerList;
-    private Button btnEnd;
+    private Button btnReload;
 //    private Button btnAddtoTodayList;
 
     private NfcAdapter mNfcAdapter;
@@ -306,7 +304,7 @@ public class MapsActivity extends AppCompatActivity
         //For storing fields when offline
         initialiseMapValues();
 
-        btnEnd = (Button) findViewById(R.id.btnEnd);
+        btnReload = (Button) findViewById(R.id.btnReload);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -612,7 +610,7 @@ public class MapsActivity extends AppCompatActivity
 
         if (lang.equalsIgnoreCase(Constants.CHINESE)) {
 
-            btnEnd.setText("完成工作");
+            btnReload.setText("完成工作");
         }
         int permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
 
@@ -651,87 +649,10 @@ public class MapsActivity extends AppCompatActivity
         editor.putBoolean(Preferences.ON_OFF_TRACKER, true);
         editor.apply();
 
-        btnEnd.setOnClickListener(new View.OnClickListener() {
+        btnReload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                    if (boardingList.size() == 0 || boardingList.isEmpty()) {
-                        builder.setMessage(Constants.STOP_POLLING_CONFIRMATION)
-                                .setTitle("Stop polling?")
-                                .setCancelable(false)
-                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        isTrack = false;
-                                        dialog.dismiss();
-                                        stopLocationUpdates();
-                                        toast(Constants.NOT_SEND_LOCATION);
-                                        editor.putBoolean(Preferences.ON_OFF_TRACKER, false);
-                                        editor.putString(Preferences.MANUAL_ACCESSCODE, "");
-                                        editor.commit();
-                                        editor.apply();
-                                    }
-                                })
-                                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        toRefresh = false;
-                                        isTrack = true;
-                                        dialog.dismiss();
-                                    }
-                                }).show();
-                    } else {
-                        builder.setMessage(Constants.ON_PASSENGER_LIST_FULL_ALERT)
-                                .setCancelable(false)
-                                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        toRefresh = false;
-                                        isTrack = true;
-                                        dialog.dismiss();
-                                    }
-                                }).show();
-                    }
-                } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                    if (boardingList.size() == 0 || boardingList.isEmpty()) {
-                        builder.setMessage(Constants.STOP_POLLING_CONFIRMATION_CH)
-                                .setCancelable(false)
-                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                        stopLocationUpdates();
-                                        isTrack = false;
-                                        toast(Constants.NOT_SEND_LOCATION_CH);
-                                        editor.putBoolean(Preferences.ON_OFF_TRACKER, false);
-                                        editor.putString(Preferences.MANUAL_ACCESSCODE, "");
-                                        editor.commit();
-                                        editor.apply();
-
-                                        refreshActivity();
-                                    }
-                                })
-                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        toRefresh = false;
-                                        dialog.dismiss();
-                                        isTrack = true;
-                                    }
-                                }).show();
-                    } else {
-                        builder.setMessage(Constants.ON_PASSENGER_LIST_FULL_ALERT_CH)
-                                .setCancelable(false)
-                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        toRefresh = false;
-                                        dialog.dismiss();
-                                        isTrack = true;
-                                    }
-                                }).show();
-                    }
-                }
+                loadJob();
             }
         });
         btnClosePopup.setOnClickListener(new OnClickListener() {
@@ -742,19 +663,7 @@ public class MapsActivity extends AppCompatActivity
         });
 
         //To retrieve passenger list
-        try {
-            mPassengersInfoTask = new PassengersInfoTask();
-            mPassengersInfoTask.execute((Void) null);
-            busRoute = new PolylineOptions();
-            jobMarker = new MarkerOptions();
-            timeMarker = new MarkerOptions();
-            editor.putInt(Preferences.PASSENGERCOUNT, passengers.size());
-            editor.putBoolean(Preferences.ENABLE_INTERNAL_NFC, enableInternalNFC);
-            editor.putBoolean(Preferences.ENABLE_EXTERNAL_NFC, enableExternalNFC);
-            editor.apply();
-        } catch (Exception e) {
-            //do nothing
-        }
+        loadJob();
 
 //        boolean isFirstTime = prefs.getBoolean(Preferences.IS_FIRST_TIME, false);
 //        if (isFirstTime) {
@@ -990,13 +899,10 @@ public class MapsActivity extends AppCompatActivity
 
         drawMarkersAndRoutes();
 
-        toSendLocation = prefs.getBoolean(Preferences.ON_OFF_TRACKER, false);
-        if (toSendLocation) {
-            if (!isAdhoc) {
-                startCheckingProximity();
-            }
-            startPollingLocation();
+        if (!isAdhoc) {
+            startCheckingProximity();
         }
+        startPollingLocation();
 
         if (useInternalNFC) {
             checkCEPASCard();
@@ -2134,8 +2040,8 @@ public class MapsActivity extends AppCompatActivity
         finish();
     }
 
-    private void reloadJob() {
-        mMap.clear();
+    private void loadJob() {
+        stopPollingLocation();
         final SharedPreferences.Editor editor = prefs.edit();
 
         //To retrieve passenger list
@@ -2154,7 +2060,11 @@ public class MapsActivity extends AppCompatActivity
             //do nothing
         }
 
-        drawMarkersAndRoutes();
+        if(mMap != null){
+            mMap.clear();
+            drawMarkersAndRoutes();
+        }
+        startPollingLocation();
     }
 
     private void initialiseMapValues() {
@@ -2749,7 +2659,7 @@ public class MapsActivity extends AppCompatActivity
                             Double routeLon = objPx.getDouble(Constants.LONGTITUDE);
                             Integer type = objPx.getInt(Constants.TYPE);
                             String time = objPx.getString(Constants.TIME);
-                            Integer numberOfPassengers = objPx.getInt(Constants.NOOFPASSENERS);
+                            int numberOfPassengers = objPx.getInt(Constants.NOOFPASSENERS);
 
                             if (numberOfPassengers > 0 && !isShareTransport) {
                                 isShareTransport = true;
@@ -2791,207 +2701,6 @@ public class MapsActivity extends AppCompatActivity
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putString(Preferences.ADHOC_CHARTER_ID, "");
                         editor.commit();
-                        isAdhoc = false;
-                    }
-                    //if everything ok, set to true
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public void performSuccessfulOperation() {
-            Log.d(LOG_TAG, "Data Retrieved Successful!");
-        }
-
-        @Override
-        public void onFailedAttempt() {
-            displayErrorMessage();
-        }
-    }
-
-    private class GetNextJobTask extends WebServiceTask {
-        GetNextJobTask() {
-            super(MapsActivity.this);
-            performRequest();
-        }
-
-        @Override
-        public void showProgress() {
-            if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                toast("Receiving job from server...");
-            } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                toast("正在加载工作。。。");
-            }
-
-        }
-
-        @Override
-        public void hideProgress() {
-
-        }
-
-        @Override
-        public boolean performRequest() {
-            String URL = Constants.JOBS_URL;
-            obj = WebServiceUtils.requestJSONObject(URL, WebServiceUtils.METHOD.GET, authenticationToken, context);
-//            Boolean isSuccessful = false;
-            if (!hasError(obj)) {
-                Log.d(LOG_TAG, obj.toString());
-                JSONObject objPx;
-                jsonObject = obj.optJSONObject(Constants.DATA);
-
-                if (jsonObject == null) {
-                    onFailedAttempt();
-                    lnrFourDigit = (LinearLayout) findViewById(R.id.lnrFourDigit);
-                    lnrFourDigit.setVisibility(View.GONE);
-                    return false;
-                } else {
-                    try {
-//                        isSuccessful = jsonObject.getBoolean(Constants.BUS_CHARTER_SUCCESS);
-                        isSchoolBus = jsonObject.getBoolean(Constants.ISSCHOOLBUS);
-                        enableInternalNFC = jsonObject.getBoolean(Constants.ENABLEINTERNAL);
-                        enableExternalNFC = jsonObject.getBoolean(Constants.ENABLEEXTERNAL);
-                        fourDigitCode = jsonObject.getString(Constants.FOURDIGITCODE);
-                        codeName = jsonObject.getString(Constants.CODENAME);
-                        routeID = jsonObject.getInt(Constants.ROUTEID);
-                    } catch (JSONException e) {
-                        Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
-                        onFailedAttempt();
-                        return false;
-                    }
-                    txtBoardingCode = (TextView) findViewById(R.id.txt_boardingCode);
-                    txtFourDigit = (TextView) findViewById(R.id.txt_fourDigit);
-
-                    txtFourDigit.setText(fourDigitCode);
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_EN);
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_CN);
-                    }
-
-                    if (fourDigitCode.isEmpty()) {
-                        lnrFourDigit = (LinearLayout) findViewById(R.id.lnrFourDigit);
-                        lnrFourDigit.setVisibility(View.GONE);
-                    } else {
-                        final Dialog builder = new Dialog(MapsActivity.this);
-
-                        View view = LayoutInflater.from(MapsActivity.this).inflate(R.layout.custom_greeting, null);
-                        TextView txtTitleDialog = (TextView) view.findViewById(R.id.txtTitleDialog);
-                        TextView txtDescriptionDialog = (TextView) view.findViewById(R.id.txtDescriptionDialog);
-                        TextView txtFourDigitDialog = (TextView) view.findViewById(R.id.txtFourDigitDialog);
-                        Button btnOkDialog = (Button) view.findViewById(R.id.btnOkDialog);
-
-                        String loggedInUsername = prefs.getString(Preferences.LOGGED_IN_USERNAME, "");
-                        if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                            txtTitleDialog.setText(Constants.GREETINGS_TITLE + " " + loggedInUsername);
-                            txtDescriptionDialog.setText("Boarding Code For " + codeName + " " + Constants.GREETINGS_DESC);
-                        } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-
-                            txtTitleDialog.setText(Constants.GREETINGS_TITLE_CN + " " + loggedInUsername);
-                            txtDescriptionDialog.setText("今天" + codeName + Constants.GREETINGS_DESC_CN);
-                        }
-                        txtFourDigitDialog.setText(fourDigitCode);
-
-                        btnOkDialog.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Toast.makeText(MapsActivity.this, "Welcome", Toast.LENGTH_SHORT).show();
-                                builder.dismiss();
-                            }
-                        });
-                        builder.setContentView(view);
-                        builder.show();
-                    }
-                    //Passengers
-                    JSONArray passengersArray = jsonObject.optJSONArray(Constants.PASSENGERS);
-                    passengers = new ArrayList<>();
-                    try {
-                        for (int i = 0; i < passengersArray.length(); i++) {
-                            objPx = passengersArray.getJSONObject(i);
-                            String name = objPx.getString(Constants.NAME);
-                            String gender = objPx.getString(Constants.GENDER);
-                            String ezlinkCanId = objPx.getString(Constants.EZLINKCANID);
-                            String picUrl = objPx.getString(Constants.PICURL);
-                            Boolean smsNOK = objPx.getBoolean(Constants.SMSNOK);
-                            String nokName = objPx.getString(Constants.NOKNAME);
-                            String nokRelationship = objPx.getString(Constants.NOKRELATIONSHIP);
-                            String nokContact = objPx.getString(Constants.NOKCONTACT);
-
-                            Passenger passenger = new Passenger(ezlinkCanId, name, gender, picUrl, smsNOK, nokName, nokRelationship, nokContact);
-                            Log.d(LOG_TAG, passenger.toString());
-
-                            passengers.add(passenger);
-                        }
-                    } catch (JSONException e) {
-                        Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
-                        onFailedAttempt();
-                        return false;
-                    }
-                    //route
-                    JSONArray routeArray = jsonObject.optJSONArray(Constants.ROUTE);
-                    routes = new ArrayList<>();
-                    try {
-                        for (int i = 0; i < routeArray.length(); i++) {
-                            objPx = routeArray.getJSONObject(i);
-                            Double routeLat = objPx.getDouble(Constants.LATITUDE);
-                            Double routeLon = objPx.getDouble(Constants.LONGTITUDE);
-                            Routes route = new Routes(routeLon, routeLat);
-                            Log.d(LOG_TAG, route.toString());
-
-                            routes.add(route);
-                        }
-                    } catch (JSONException e) {
-                        Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
-                        onFailedAttempt();
-                        return false;
-                    }
-                    //jobs
-                    JSONArray jobArray = jsonObject.optJSONArray(Constants.JOBS);
-                    isShareTransport = false;
-                    jobs = new ArrayList<>();
-                    try {
-                        for (int i = 0; i < jobArray.length(); i++) {
-                            objPx = jobArray.getJSONObject(i);
-                            String pointName = objPx.getString(Constants.POINTNAME);
-                            Double routeLat = objPx.getDouble(Constants.LATITUDE);
-                            Double routeLon = objPx.getDouble(Constants.LONGTITUDE);
-                            Integer type = objPx.getInt(Constants.TYPE);
-                            String time = objPx.getString(Constants.TIME);
-                            Integer numberOfPassengers = objPx.getInt(Constants.NOOFPASSENERS);
-
-                            if (numberOfPassengers > 0 && !isShareTransport) {
-                                isShareTransport = true;
-                            }
-
-                            Jobs job = new Jobs(pointName, routeLon, routeLat, type, time, numberOfPassengers);
-                            Log.d(LOG_TAG, job.toString());
-
-                            jobs.add(job);
-                        }
-                        proxmityCheck = jobs;
-                    } catch (JSONException e) {
-                        Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
-                        onFailedAttempt();
-                        return false;
-                    }
-                    //adhoc
-                    try {
-                        JSONObject adhocArray = jsonObject.optJSONObject(Constants.ADHOC);
-                        String id = adhocArray.getString(Constants.BUS_CHARTER_ID);
-                        int jobStatus = adhocArray.getInt(Constants.JOBSTATUS);
-                        String pocName = adhocArray.getString(Constants.CHARTER_POC_NAME);
-                        String pocContactNo = adhocArray.getString(Constants.CHARTER_POC_CONTACT_NO);
-
-                        adhocJob = new Adhoc(id, jobStatus, pocName, pocContactNo);
-                        Log.d(LOG_TAG, adhocJob.toString());
-                        isAdhoc = true;
-                        if (jobStatus == 99) {
-                            isAdhoc = false;
-                        }
-                    } catch (JSONException e) {
-                        onFailedAttempt();
                         isAdhoc = false;
                     }
                     //if everything ok, set to true

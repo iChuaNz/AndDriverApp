@@ -29,12 +29,12 @@
         </FrameLayout>
 
         <Button
-            android:id="@+id/btnEnd"
+            android:id="@+id/btnReload"
             android:layout_width="match_parent"
             android:layout_height="190dp"
             android:layout_weight="1"
             android:background="#F68B1F"
-            android:text="@string/end_trip"
+            android:text="@string/reload_job"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -244,8 +244,8 @@
         android:layout_gravity="bottom"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
-            android:src="@drawable/endtrip"
-            android:visibility="gone" />
+        android:src="@drawable/endtrip"
+        android:visibility="gone" />
 
 
 
