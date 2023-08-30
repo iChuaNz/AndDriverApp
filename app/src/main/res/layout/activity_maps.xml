@@ -78,6 +78,15 @@
                     android:textSize="60dp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/txt_passenger_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:textSize="25dp"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <FrameLayout
@@ -124,23 +133,6 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <TextView
-            android:id="@+id/txt_passenger_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:textSize="25dp"
-            android:visibility="visible" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay"
         android:visibility="visible">
 
@@ -153,7 +145,16 @@
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnCamera"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/colorBlue"
+                    android:text="@string/auto" />
 
                 <ImageView
                     android:id="@+id/iv_nfcconnectionstatus"
@@ -194,10 +195,10 @@
         android:id="@+id/fl_popupWindow"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="72dp"
         android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
         android:layout_marginTop="72dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="72dp"
         android:background="@drawable/popover_background"
         android:clickable="true"
         android:padding="20dp"

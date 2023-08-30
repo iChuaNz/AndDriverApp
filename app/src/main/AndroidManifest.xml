@@ -15,7 +15,7 @@
          location permissions for the 'MyLocation' functionality. 
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <uses-feature android:name="android.hardware.location.gps" />
     <uses-feature android:name="android.hardware.usb.host" />
@@ -67,7 +67,8 @@
             android:name=".fragments.LoginActivity"
             android:label="@string/title_activity_login"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="true">
             <intent-filter>
                 <action android:name="OPEN_ALT_ACTIVITY" />
 
@@ -188,6 +189,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".fragments.ScannerActivity" />
 
         <!-- [START fcm_default_icon] -->
         <!--
@@ -220,11 +222,10 @@
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
-        <service android:name="sg.com.commute_solutions.bustracker.service.GoogleServices"></service>
-        <service android:name="sg.com.commute_solutions.bustracker.service.BackgroundLocationService"></service>
+        <service android:name="sg.com.commute_solutions.bustracker.service.GoogleServices" />
+        <service android:name="sg.com.commute_solutions.bustracker.service.BackgroundLocationService" />
         <!-- [END firebase_iid_service] -->
 
-        <activity android:name=".fragments.ScannerActivity"></activity>
     </application>
 
 </manifest>

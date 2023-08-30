@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -186,6 +187,7 @@ public class MapsActivity extends AppCompatActivity
     private ImageView imgPhone, imgBackground;
     private TableLayout passengerList;
     private Button btnReload;
+    private Button btnCamera;
 //    private Button btnAddtoTodayList;
 
     private NfcAdapter mNfcAdapter;
@@ -305,6 +307,7 @@ public class MapsActivity extends AppCompatActivity
         initialiseMapValues();
 
         btnReload = (Button) findViewById(R.id.btnReload);
+        btnCamera = (Button) findViewById(R.id.btnCamera);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -653,6 +656,32 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 loadJob();
+            }
+        });
+        btnCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (followUser) {
+                    followUser = false;
+                    btnCamera.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorPrimary)));
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        btnCamera.setText("Camera - Manual");
+                        toast("Camera - Manual");
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        btnCamera.setText("地图 - 手动");
+                        toast("手动地图");
+                    }
+                } else {
+                    followUser = true;
+                    btnCamera.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorBlue)));
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        btnCamera.setText("Camera - Auto");
+                        toast("Camera - Automatic.");
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        btnCamera.setText("地图 - 自动");
+                        toast("自动地图");
+                    }
+                }
             }
         });
         btnClosePopup.setOnClickListener(new OnClickListener() {

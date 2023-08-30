@@ -121,6 +121,7 @@
     <string name="service_start_successfully">Service start successfully</string>
     <string name="end_trip">END TRIP</string>
     <string name="reload_job">Reload Job</string>
+    <string name="auto">Camera - Auto</string>
     <string-array name="busTypeArray">
         <item>11-Seater</item>
         <item>13-Seater</item>
