@@ -47,6 +47,7 @@ public class Constants {
     public static final String START_JOB_MESSAGE = "Please tap on 'Start Trip' Button to begin this adhoc job";
     public static final String JOB_ONGOING_MESSAGE = "Job is in progress";
     public static final String END_JOB_CONFIRMATION = "Please confirm that this adhoc job is completed.";
+    public static final String END_ROUTE_CONFIRMATION = "Please confirm that this route job is completed.";
     public static final String END_JOB_MESSAGE = "This job has already been completed!";
     public static final String JOB_EXPIRED_MESSAGE = "Job has passed its allowance time therefore it has been deemed incomplete. Kindly be noted the money with-held will be deducted for compensation";
     public static final String ADHOC_ERROR_MESSAGE = "There is an error processing this adhoc job. Kindly contact the operator and quote this charter ID for more information:\n";
@@ -194,9 +195,9 @@ public class Constants {
 //    public static final String ROUTEPOINTS = END_POINT + "/track/RoutePoints/";
 
     //Staging
-    //public static final String END_POINT = "https://bustrackerstaging.azurewebsites.net/api/2";
+    public static final String END_POINT = "https://bustrackerstaging.azurewebsites.net/api/2";
     //Production
-    public static final String END_POINT = "https://bustracker.azurewebsites.net/api/2";
+//    public static final String END_POINT = "https://bustracker.azurewebsites.net/api/2";
     public static final String LOGIN_URL = END_POINT + "/user/login";
     public static final String LOG_SHEET_URL = END_POINT + "/logsheet/PostLogSheet";
     public static final String LOGIN_URL_V2 = END_POINT + "/user/loginV2";
@@ -211,8 +212,10 @@ public class Constants {
     public static final String VERSION_URL = END_POINT + "/user/login";
     public static final String LOCATION_URL = END_POINT + "/locations/gps";
     public static final String JOBS_URL = END_POINT + "/Jobs";
+    public static final String ALL_JOBS_URL = JOBS_URL + "/All";
     public static final String START_TRIP_URL = JOBS_URL + "/startTrip";
     public static final String END_TRIP_URL = JOBS_URL + "/endTrip";
+    public static final String END_TRIP_ROUTE_URL = JOBS_URL + "/EndTripRoute";
     public static final String ATTENDANCE_URL = JOBS_URL + "/attendances";
     public static final String LOGOUT_URL = END_POINT + "/user/logout";
 
@@ -315,8 +318,8 @@ public class Constants {
     public static final double EARTH_RADIUS = 6378100.0;
 
     //Route
-    public static final String JOBS = "points";
-    public static final String ROUTE = "path";
+    public static final String ROUTE_POINTS = "points";
+    public static final String ROUTE_PATH = "path";
     public static final String POINTNAME = "pointName";
     public static final String TYPE = "type";
     public static final String TIME = "time";

@@ -3,7 +3,7 @@ package sg.com.commute_solutions.bustracker.data;
 /**
  * Created by Kyle on 29/9/16.
  */
-public class Jobs {
+public class RoutePoint {
     private String pointName;
     private Double longitude;
     private Double latitude;
@@ -11,7 +11,7 @@ public class Jobs {
     private String time;
     private Integer numberOfPassengers;
 
-    public Jobs(String pointName, Double longitude, Double latitude, Integer type, String time, Integer numberOfPassengers) {
+    public RoutePoint(String pointName, Double longitude, Double latitude, Integer type, String time, Integer numberOfPassengers) {
         this.pointName = pointName;
         this.longitude = longitude;
         this.latitude = latitude;

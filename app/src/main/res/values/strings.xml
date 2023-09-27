@@ -122,6 +122,15 @@
     <string name="end_trip">END TRIP</string>
     <string name="reload_job">Reload Job</string>
     <string name="auto">Camera - Auto</string>
+    <string name="camera_manual">Camera - Manual</string>
+    <string name="camera_auto">Camera - Auto</string>
+    <string name="camera_manual_ch">地图 - 手动</string>
+    <string name="camera_auto_ch">地图 - 自动</string>
+    <string name="close_popup">Close popup</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="today">Today</string>
+    <string name="open_google_map">Open Google Map</string>
+    <string name="call_contact_center">Call contact center</string>
     <string-array name="busTypeArray">
         <item>11-Seater</item>
         <item>13-Seater</item>

@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -41,13 +42,13 @@ import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.StrictMode;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
@@ -55,12 +56,8 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,19 +67,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.acs.bluetooth.BluetoothReader;
-import com.acs.bluetooth.BluetoothReader.OnAuthenticationCompleteListener;
-import com.acs.bluetooth.BluetoothReader.OnCardStatusAvailableListener;
-import com.acs.bluetooth.BluetoothReader.OnCardStatusChangeListener;
-import com.acs.bluetooth.BluetoothReader.OnEnableNotificationCompleteListener;
-import com.acs.bluetooth.BluetoothReader.OnResponseApduAvailableListener;
 import com.acs.bluetooth.BluetoothReaderGattCallback;
-import com.acs.bluetooth.BluetoothReaderGattCallback.OnConnectionStateChangeListener;
 import com.acs.bluetooth.BluetoothReaderManager;
-import com.acs.bluetooth.BluetoothReaderManager.OnReaderDetectionListener;
 import com.acs.smartcard.Reader;
-import com.acs.smartcard.Reader.OnStateChangeListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -98,7 +88,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -109,14 +98,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import sg.com.commute_solutions.bustracker.R;
+import sg.com.commute_solutions.bustracker.adapters.RouteAdapter;
 import sg.com.commute_solutions.bustracker.common.Constants;
 import sg.com.commute_solutions.bustracker.common.Preferences;
 import sg.com.commute_solutions.bustracker.data.Adhoc;
-import sg.com.commute_solutions.bustracker.data.Jobs;
+import sg.com.commute_solutions.bustracker.data.Job;
+import sg.com.commute_solutions.bustracker.data.RoutePoint;
 import sg.com.commute_solutions.bustracker.data.Passenger;
-import sg.com.commute_solutions.bustracker.data.Routes;
+import sg.com.commute_solutions.bustracker.data.RoutePath;
+import sg.com.commute_solutions.bustracker.databinding.ActivityMapsBinding;
 import sg.com.commute_solutions.bustracker.service.GoogleServices;
 import sg.com.commute_solutions.bustracker.util.CEPAS.CEPASUtil;
 import sg.com.commute_solutions.bustracker.util.GPSUtil;
@@ -154,6 +148,7 @@ public class MapsActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private LatLng currentlatLng;
+    private HandlerThread mHandlerThread;
     private static Handler mHandler;
 //    private float mDeclination;
 //    private float[] mRotationMatrix = new float[16];
@@ -168,36 +163,25 @@ public class MapsActivity extends AppCompatActivity
     private Resources resources;
     private ProcessEzlink ezlink;
 
+    private JSONObject obj, jsonObject;
     private PassengersInfoTask mPassengersInfoTask = null;
     private LocationTask mLocationTask = null;
     private AttendanceTask mAttendanceTask = null;
-    private JSONObject obj, jsonObject;
-
-    private TextView txtResult, txtJobStatus;
-    private TextView txtBoardingCode, txtFourDigit;
-    private ImageView ivResult, ivNFCConnectionStatus, btnStartTrip, btnEndTrip;
-    private LinearLayout lnrFourDigit;
-
     private StartTripTask mStartTripTask = null;
     private EndTripTask mEndTripTask = null;
+    private EndTripRouteTask mEndTripRouteTask = null;
 
     //    private AlertDialog loadingScreen;
-    private FrameLayout popupWindow;
-    private ImageButton btnClosePopup;
-    private ImageView imgPhone, imgBackground;
-    private TableLayout passengerList;
-    private Button btnReload;
-    private Button btnCamera;
 //    private Button btnAddtoTodayList;
 
     private NfcAdapter mNfcAdapter;
     private boolean useExternalNFC = false;
     private boolean useInternalNFC = false;
     private boolean useUsbReader = false;
+    private boolean isTodaySelected = true;
 
     private String message;
-    private boolean toSendLocation, isSchoolBus;
-    private boolean toRefresh = true;
+    private boolean isSchoolBus;
     private boolean isDropOff = false;
     private boolean followUser = true;
     private String fourDigitCode = "";
@@ -236,8 +220,8 @@ public class MapsActivity extends AppCompatActivity
     private ArrayList<Float> aAccuracy, aSpeed;
     private ArrayList<String> aDate;
     private ArrayList<Passenger> passengers, boardingList, boardListNoClearing;
-    private ArrayList<Jobs> jobs, proxmityCheck;
-    private ArrayList<Routes> routes;
+    private ArrayList<RoutePoint> routePoints, proxmityCheck;
+    private ArrayList<RoutePath> routePaths;
     private ArrayList<LatLng> routeCoordinatesList, jobMarkerList, proximityList;
     private String lang, authToken, NFCIndicator, currentDate, lastUpdatedDate;
     private PolylineOptions busRoute;
@@ -267,27 +251,28 @@ public class MapsActivity extends AppCompatActivity
     private static final int CHECK_NFC_ON = 2;
     private static final int CHECK_GPS_ON = 3;
 
-    private boolean isOMO = false;
-    private boolean isBA = false;
     private int exitCount = 0;
 
-    private boolean isTrack = true;
-
-    GoogleServices mLocationService = new GoogleServices();
-    Intent mServiceIntent;
+//    GoogleServices mLocationService = new GoogleServices();
+//    Intent mServiceIntent;
     Activity mActivity;
+    ActivityMapsBinding activityMapsBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        activityMapsBinding = ActivityMapsBinding.inflate(getLayoutInflater());
+
+        setContentView(activityMapsBinding.getRoot());
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         prefs = this.getSharedPreferences(Constants.SHARE_PREFERENCE_PACKAGE, Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = prefs.edit();
         editor.putString(Preferences.CURRENTACTIVITY, "map");
         editor.apply();
         context = this;
-        mHandler = new Handler();
+        mHandlerThread = new HandlerThread("HandlerThread");
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
         pollingInterval = 5000;
         proximityInterval = 1000;
         sendPassengerListInterval = 300000;
@@ -306,27 +291,23 @@ public class MapsActivity extends AppCompatActivity
         //For storing fields when offline
         initialiseMapValues();
 
-        btnReload = (Button) findViewById(R.id.btnReload);
-        btnCamera = (Button) findViewById(R.id.btnCamera);
-
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         editor.putString(Preferences.CAN_ID, "");
         editor.apply();
 
-        toSendLocation = prefs.getBoolean(Preferences.ON_OFF_TRACKER, false);
         authToken = StringUtil.deNull(prefs.getString(Preferences.AUTH_TOKEN, ""));
-        if (authToken == null || authToken.isEmpty()) {
+        if (authToken.isEmpty()) {
             resetApp();
         } else {
             authenticationToken.put(Constants.TOKEN, authToken);
         }
 
         lang = prefs.getString(Preferences.LANGUAGE, "");
-        if (lang.isEmpty() || lang.equalsIgnoreCase("")) {
+        if (lang != null && lang.isEmpty() || lang.equalsIgnoreCase("")) {
             lang = Constants.ENGLISH;
             editor.putString(Preferences.LANGUAGE, Constants.ENGLISH);
-            editor.commit();
+            editor.apply();
         }
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -370,13 +351,12 @@ public class MapsActivity extends AppCompatActivity
         mCurrentPositionLogo = new MarkerOptions();
 
         //Connection light for external bluetooth device
-        ivNFCConnectionStatus = (ImageView) findViewById(R.id.iv_nfcconnectionstatus);
         if (useInternalNFC) {
-            ivNFCConnectionStatus.setImageResource(android.R.color.transparent);
+            activityMapsBinding.ivNfcConnectionStatus.setImageResource(android.R.color.transparent);
         }
         if (useExternalNFC) {
             bmBluetooth = BitmapFactory.decodeResource(resources, R.drawable.signal_red);
-            ivNFCConnectionStatus.setImageBitmap(bmBluetooth);
+            activityMapsBinding.ivNfcConnectionStatus.setImageBitmap(bmBluetooth);
             BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
             String deviceAddress = prefs.getString(Preferences.BLUETOOTH_DEVICE_ADDRESS, "");
@@ -395,28 +375,20 @@ public class MapsActivity extends AppCompatActivity
 
             while (mBluetoothReader == null) {
                 try {
-                    mGattCallback.setOnConnectionStateChangeListener(new OnConnectionStateChangeListener() {
-                        @Override
-                        public void onConnectionStateChange(BluetoothGatt bluetoothGatt, int state, int newState) {
-                            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                                /* Detect the connected reader. */
-                                mBluetoothReaderManager.detectReader(bluetoothGatt, mGattCallback);
-                                mBluetoothReaderManager.setOnReaderDetectionListener(new OnReaderDetectionListener() {
-                                    @Override
-                                    public void onReaderDetection(BluetoothReader bluetoothReader) {
-                                        mBluetoothReader = bluetoothReader;
-                                    }
-                                });
-                            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                                mBluetoothReader = null;
-                                /*
-                                 * Release resources occupied by Bluetooth
-                                 * GATT client.
-                                 */
-                                if (mBluetoothGatt != null) {
-                                    mBluetoothGatt.close();
-                                    mBluetoothGatt = null;
-                                }
+                    mGattCallback.setOnConnectionStateChangeListener((bluetoothGatt, state, newState) -> {
+                        if (newState == BluetoothProfile.STATE_CONNECTED) {
+                            /* Detect the connected reader. */
+                            mBluetoothReaderManager.detectReader(bluetoothGatt, mGattCallback);
+                            mBluetoothReaderManager.setOnReaderDetectionListener(bluetoothReader -> mBluetoothReader = bluetoothReader);
+                        } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                            mBluetoothReader = null;
+                            /*
+                             * Release resources occupied by Bluetooth
+                             * GATT client.
+                             */
+                            if (mBluetoothGatt != null) {
+                                mBluetoothGatt.close();
+                                mBluetoothGatt = null;
                             }
                         }
                     });
@@ -447,21 +419,11 @@ public class MapsActivity extends AppCompatActivity
                             builder.setMessage(Constants.DEVICE_READY_TO_PAIR)
                                     .setTitle("Message")
                                     .setCancelable(false)
-                                    .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    }).show();
+                                    .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
                         } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                             builder.setMessage(Constants.DEVICE_READY_TO_PAIR_CH)
                                     .setCancelable(false)
-                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    }).show();
+                                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss()).show();
                         }
                     } else {
                         Log.v(LOG_TAG, "Unable to authenticate");
@@ -472,37 +434,28 @@ public class MapsActivity extends AppCompatActivity
             } catch (Exception e) {
                 Log.v(LOG_TAG, "Unable to locate device!");
             }
-            ivNFCConnectionStatus.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    connectReader();
-                }
-            });
+            activityMapsBinding.ivNfcConnectionStatus.setOnClickListener(v -> connectReader());
         }
         if (useUsbReader) {
-            ivNFCConnectionStatus.setImageResource(android.R.color.transparent);
+            activityMapsBinding.ivNfcConnectionStatus.setImageResource(android.R.color.transparent);
             if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
                 builder.setMessage(Constants.USB_ALERT)
                         .setTitle("Attention!")
                         .setCancelable(false)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                readerSelectionDialog().show();
-                                readerSelectionDialog().setCanceledOnTouchOutside(false);
-                            }
+                        .setPositiveButton("Ok", (dialog, which) -> {
+                            dialog.dismiss();
+                            readerSelectionDialog().show();
+                            readerSelectionDialog().setCanceledOnTouchOutside(false);
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
             } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                 builder.setMessage(Constants.USB_ALERT_CH)
                         .setCancelable(false)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                readerSelectionDialog().show();
-                                readerSelectionDialog().setCanceledOnTouchOutside(false);
-                            }
+                        .setPositiveButton("Ok", (dialog, which) -> {
+                            dialog.dismiss();
+                            readerSelectionDialog().show();
+                            readerSelectionDialog().setCanceledOnTouchOutside(false);
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
@@ -524,70 +477,53 @@ public class MapsActivity extends AppCompatActivity
             registerReceiver(mReceiver, filter);
 
             final int finalPreferredProtocols = preferredProtocols;
-            mReader.setOnStateChangeListener(new OnStateChangeListener() {
-                @Override
-                public void onStateChange(int slotNum, int prevState, int currState) {
+            mReader.setOnStateChangeListener((slotNum, prevState, currState) -> {
 
-                    if (prevState < Reader.CARD_UNKNOWN || prevState > Reader.CARD_SPECIFIC) {
-                        prevState = Reader.CARD_UNKNOWN;
-                    }
+                if (prevState < Reader.CARD_UNKNOWN || prevState > Reader.CARD_SPECIFIC) {
+                    prevState = Reader.CARD_UNKNOWN;
+                }
 
-                    if (currState < Reader.CARD_UNKNOWN || currState > Reader.CARD_SPECIFIC) {
-                        currState = Reader.CARD_UNKNOWN;
-                    }
+                if (currState < Reader.CARD_UNKNOWN || currState > Reader.CARD_SPECIFIC) {
+                    currState = Reader.CARD_UNKNOWN;
+                }
 
-                    // Create output string
-                    final String outputString = "Slot " + slotNum + ": " + Constants.stateStrings[prevState] + " -> " + Constants.stateStrings[currState];
-                    Log.d(LOG_TAG, outputString);
+                // Create output string
+                final String outputString = "Slot " + slotNum + ": " + Constants.stateStrings[prevState] + " -> " + Constants.stateStrings[currState];
+                Log.d(LOG_TAG, outputString);
 
-                    if (currState == 2) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    //Power up Reader
-                                    mReader.power(0, 2);
-                                    mReader.setProtocol(0, finalPreferredProtocols);
+                if (currState == 2) {
+                    runOnUiThread(() -> {
+                        try {
+                            //Power up Reader
+                            mReader.power(0, 2);
+                            mReader.setProtocol(0, finalPreferredProtocols);
 
-                                    // Transmit APDU
-                                    byte[] response = new byte[300];
-                                    byte[] command = StringUtil.hexString2Bytes(Constants.APDU1);
-                                    mReader.transmit(0, command, command.length, response, response.length);
-                                    command = StringUtil.hexString2Bytes(Constants.APDU2);
-                                    mReader.transmit(0, command, command.length, response, response.length);
-                                    String result = StringUtil.toHexString(response);
-                                    result = result.replaceAll("\\s+", "");
-                                    if (result.length() > 32) {
-                                        String canId = result.substring(16, 32);
-                                        checkPassengerList(canId, true);
-                                    } else {
-                                        String canId = "Error";
-                                        checkPassengerList(canId, true);
-                                    }
-                                } catch (Exception e) {
-                                    Log.d(LOG_TAG, e.toString());
-                                }
+                            // Transmit APDU
+                            byte[] response = new byte[300];
+                            byte[] command = StringUtil.hexString2Bytes(Constants.APDU1);
+                            mReader.transmit(0, command, command.length, response, response.length);
+                            command = StringUtil.hexString2Bytes(Constants.APDU2);
+                            mReader.transmit(0, command, command.length, response, response.length);
+                            String result = StringUtil.toHexString(response);
+                            result = result.replaceAll("\\s+", "");
+                            if (result.length() > 32) {
+                                String canId = result.substring(16, 32);
+                                checkPassengerList(canId, true);
+                            } else {
+                                String canId = "Error";
+                                checkPassengerList(canId, true);
                             }
-                        });
-                    }
+                        } catch (Exception e) {
+                            Log.d(LOG_TAG, e.toString());
+                        }
+                    });
                 }
             });
         }
 
-        ivNFCConnectionStatus.invalidate();
-        popupWindow = (FrameLayout) findViewById(R.id.fl_popupWindow);
-        btnClosePopup = (ImageButton) findViewById(R.id.btn_closePopup);
-        passengerList = (TableLayout) findViewById(R.id.table_passengerList);
-
-        popupWindow.setAlpha(0.8f);
-
-        FloatingActionButton fabSettings = findViewById(R.id.fab_settings);
-        imgPhone = (ImageView) findViewById(R.id.imgPhone);
-        imgBackground = (ImageView) findViewById(R.id.imgBackground);
+        activityMapsBinding.ivNfcConnectionStatus.invalidate();
 
         ezlink = new ProcessEzlink();
-        txtResult = (TextView) findViewById(R.id.txt_passenger_name);
-        ivResult = (ImageView) findViewById(R.id.iv_passenger_result);
 
         if (boardingList == null || boardingList.size() == 0) {
             boardingList = new ArrayList<>();
@@ -604,90 +540,75 @@ public class MapsActivity extends AppCompatActivity
             boardListNoClearing = new ArrayList<>();
         }
 
-        String driverRole = prefs.getString(Preferences.ROLE, "");
-        if (driverRole.equalsIgnoreCase("OMO")) {
-            isOMO = true;
-        } else if (driverRole.equalsIgnoreCase("BA")) {
-            isBA = true;
-        }
-
-        if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-
-            btnReload.setText("完成工作");
-        }
-        int permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
-
-        imgBackground.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent callIntent = new Intent(Intent.ACTION_CALL);
-                callIntent.setData(Uri.parse("tel:67340147"));
-                if (ActivityCompat.checkSelfPermission(MapsActivity.this,
-                        Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(MapsActivity.this,
-                            new String[]{android.Manifest.permission.CALL_PHONE},
-                            1);
-                    return;
-                }
-                startActivity(callIntent);
+        activityMapsBinding.btnMaps.setOnClickListener(view -> {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (RoutePoint point : routePoints) {
+                stringBuilder.append(point.getLatitude()).append(",").append(point.getLongitude()).append("+to:");
             }
+            stringBuilder.substring(0,stringBuilder.length() - 4);
+            Uri mapsUri = Uri.parse("http://maps.google.com/maps?daddr=" + stringBuilder);
+            Intent mapsIntent = new Intent(Intent.ACTION_VIEW, mapsUri);
+            mapsIntent.setPackage("com.google.android.apps.maps");
+
+            try {
+                startActivity(mapsIntent);
+            } catch (ActivityNotFoundException ex) {
+                toast("Google Maps application not installed");
+            }
+
         });
 
-        imgPhone.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent callIntent = new Intent(Intent.ACTION_CALL);
-                callIntent.setData(Uri.parse("tel:67340147"));
-                if (ActivityCompat.checkSelfPermission(MapsActivity.this,
-                        Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(MapsActivity.this,
-                            new String[]{android.Manifest.permission.CALL_PHONE},
-                            1);
-                    return;
-                }
-                startActivity(callIntent);
+        activityMapsBinding.btnPhone.setOnClickListener(v -> {
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:67340147"));
+            if (ActivityCompat.checkSelfPermission(MapsActivity.this,
+                    Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MapsActivity.this,
+                        new String[]{Manifest.permission.CALL_PHONE},
+                        1);
+                return;
             }
+            startActivity(callIntent);
         });
 
         editor.putBoolean(Preferences.ON_OFF_TRACKER, true);
         editor.apply();
 
-        btnReload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadJob();
-            }
-        });
-        btnCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (followUser) {
-                    followUser = false;
-                    btnCamera.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorPrimary)));
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        btnCamera.setText("Camera - Manual");
-                        toast("Camera - Manual");
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        btnCamera.setText("地图 - 手动");
-                        toast("手动地图");
-                    }
-                } else {
-                    followUser = true;
-                    btnCamera.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorBlue)));
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        btnCamera.setText("Camera - Auto");
-                        toast("Camera - Automatic.");
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        btnCamera.setText("地图 - 自动");
-                        toast("自动地图");
-                    }
+        activityMapsBinding.btnReload.setOnClickListener(view -> loadJob());
+
+        activityMapsBinding.btnEndRoute.setOnSwipeListener(() ->
+                builder.setMessage(Constants.END_ROUTE_CONFIRMATION)
+                .setPositiveButton("Yes", (dialogInterface, i) -> {
+                    mEndTripRouteTask = new EndTripRouteTask(String.valueOf(routeID));
+                    mEndTripRouteTask.execute((Void) null);
+                })
+                .setNegativeButton("No", (dialogInterface, i) -> {
+                    //do nothing
+                    activityMapsBinding.btnEndRoute.showResultIcon(false, true);
+                })
+                .show());
+
+        activityMapsBinding.btnCamera.setOnClickListener(v -> {
+            if (followUser) {
+                followUser = false;
+                activityMapsBinding.btnCamera.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorPrimary)));
+                if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                    activityMapsBinding.btnCamera.setText(R.string.camera_manual);
+                    toast(getResources().getString(R.string.camera_manual));
+                } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                    activityMapsBinding.btnCamera.setText(R.string.camera_manual_ch);
+                    toast(getResources().getString(R.string.camera_manual_ch));
                 }
-            }
-        });
-        btnClosePopup.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popupWindow.setVisibility(View.GONE);
+            } else {
+                followUser = true;
+                activityMapsBinding.btnCamera.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorBlue)));
+                if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                    activityMapsBinding.btnCamera.setText(R.string.camera_auto);
+                    toast(getResources().getString(R.string.camera_auto));
+                } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                    activityMapsBinding.btnCamera.setText(R.string.camera_auto_ch);
+                    toast(getResources().getString(R.string.camera_auto_ch));
+                }
             }
         });
 
@@ -703,173 +624,112 @@ public class MapsActivity extends AppCompatActivity
 //            startActivity(intent);
 //        }
 
-        fabSettings.setOnClickListener(v -> {
+        activityMapsBinding.fabSettings.setOnClickListener(v -> {
             sendPassengerListForToday();
             Intent intent = new Intent(MapsActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
 
-        txtJobStatus = (TextView) findViewById(R.id.txt_jobStatus);
-        btnStartTrip = (ImageView) findViewById(R.id.btn_starttrip);
-        btnEndTrip = (ImageView) findViewById(R.id.btn_endtrip);
-        txtBoardingCode = (TextView) findViewById(R.id.txt_boardingCode);
-        txtFourDigit = (TextView) findViewById(R.id.txt_fourDigit);
+        activityMapsBinding.fabSchedule.setOnClickListener(v -> {
+            if(isTodaySelected){
+                activityMapsBinding.btnRouteToday.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorActivated)));
+                activityMapsBinding.btnRouteTmr.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorIdle)));
+            } else {
+                activityMapsBinding.btnRouteToday.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorIdle)));
+                activityMapsBinding.btnRouteTmr.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorActivated)));
+            }
+            JobScheduleTask mJobScheduleTask = new JobScheduleTask();
+            mJobScheduleTask.execute((Void) null);
+        });
+
         if (isAdhoc) {
 
-            txtJobStatus.setVisibility(View.VISIBLE);
+            activityMapsBinding.txtJobStatus.setVisibility(View.VISIBLE);
             int jobStatus = adhocJob.getJobStatus();
             switch (jobStatus) {
                 case 0:
-                    btnStartTrip.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnStartTrip.setVisibility(View.VISIBLE);
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        txtJobStatus.setText(Constants.START_JOB_MESSAGE);
-                        btnStartTrip.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                builder.setMessage(Constants.START_JOB_CONFIRMATION)
-                                        .setCancelable(false)
-                                        .setPositiveButton("Yes - Start Job", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                mStartTripTask = new StartTripTask(adhocJob.getId());
-                                                mStartTripTask.execute((Void) null);
-                                            }
-                                        })
-                                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        })
-                                        .show();
-                            }
-                        });
+                        activityMapsBinding.txtJobStatus.setText(Constants.START_JOB_MESSAGE);
+                        activityMapsBinding.btnStartTrip.setOnClickListener(v -> builder.setMessage(Constants.START_JOB_CONFIRMATION)
+                                .setCancelable(false)
+                                .setPositiveButton("Yes - Start Job", (dialog, which) -> {
+                                    mStartTripTask = new StartTripTask(adhocJob.getId());
+                                    mStartTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                                .show());
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        txtJobStatus.setText(Constants.START_JOB_MESSAGE_CH);
-                        btnStartTrip.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                builder.setMessage(Constants.START_JOB_CONFIRMATION_CH)
-                                        .setCancelable(false)
-                                        .setPositiveButton("开始", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                mStartTripTask = new StartTripTask(adhocJob.getId());
-                                                mStartTripTask.execute((Void) null);
-                                            }
-                                        })
-                                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        })
-                                        .show();
-                            }
-                        });
+                        activityMapsBinding.txtJobStatus.setText(Constants.START_JOB_MESSAGE_CH);
+                        activityMapsBinding.btnStartTrip.setOnClickListener(v -> builder.setMessage(Constants.START_JOB_CONFIRMATION_CH)
+                                .setCancelable(false)
+                                .setPositiveButton("开始", (dialog, which) -> {
+                                    mStartTripTask = new StartTripTask(adhocJob.getId());
+                                    mStartTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("取消", (dialog, which) -> dialog.dismiss())
+                                .show());
                     }
                     break;
                 case 1:
-                    btnEndTrip.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnEndTrip.setVisibility(View.VISIBLE);
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        txtJobStatus.setText(Constants.JOB_ONGOING_MESSAGE);
-                        btnEndTrip.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                builder.setMessage(Constants.END_JOB_CONFIRMATION)
-                                        .setCancelable(false)
-                                        .setPositiveButton("Yes-I have finished this charter", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                mEndTripTask = new EndTripTask(adhocJob.getId(), false);
-                                                mEndTripTask.execute((Void) null);
-                                            }
-                                        })
-                                        .setNeutralButton("No-Passenger did not show up", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                mEndTripTask = new EndTripTask(adhocJob.getId(), true);
-                                                mEndTripTask.execute((Void) null);
-                                            }
-                                        })
-                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        })
-                                        .show();
-                            }
-                        });
+                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_ONGOING_MESSAGE);
+                        activityMapsBinding.btnEndTrip.setOnClickListener(v -> builder.setMessage(Constants.END_JOB_CONFIRMATION)
+                                .setCancelable(false)
+                                .setPositiveButton("Yes-I have finished this charter", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), false);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNeutralButton("No-Passenger did not show up", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), true);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                                .show());
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        txtJobStatus.setText(Constants.JOB_ONGOING_MESSAGE_CH);
-                        btnEndTrip.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                builder.setMessage(Constants.END_JOB_CONFIRMATION_CH)
-                                        .setCancelable(false)
-                                        .setPositiveButton("Yes-I have finished this charter", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                mEndTripTask = new EndTripTask(adhocJob.getId(), false);
-                                                mEndTripTask.execute((Void) null);
-                                            }
-                                        })
-                                        .setNeutralButton("No-Passenger did not show up", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                mEndTripTask = new EndTripTask(adhocJob.getId(), true);
-                                                mEndTripTask.execute((Void) null);
-                                            }
-                                        })
-                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        })
-                                        .show();
-                            }
-                        });
+                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_ONGOING_MESSAGE_CH);
+                        activityMapsBinding.btnEndTrip.setOnClickListener(v -> builder.setMessage(Constants.END_JOB_CONFIRMATION_CH)
+                                .setCancelable(false)
+                                .setPositiveButton("Yes-I have finished this charter", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), false);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNeutralButton("No-Passenger did not show up", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), true);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                                .show());
                     }
-                    txtJobStatus.setTextColor(Color.RED);
-                    setBlinkingView(txtJobStatus);
+                    activityMapsBinding.txtJobStatus.setTextColor(Color.RED);
+                    setBlinkingView(activityMapsBinding.txtJobStatus);
                     break;
                 case 2:
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        txtJobStatus.setText(Constants.END_JOB_MESSAGE);
+                        activityMapsBinding.txtJobStatus.setText(Constants.END_JOB_MESSAGE);
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        txtJobStatus.setText(Constants.END_JOB_MESSAGE_CH);
+                        activityMapsBinding.txtJobStatus.setText(Constants.END_JOB_MESSAGE_CH);
                     }
-                    txtJobStatus.setTextColor(Color.BLACK);
+                    activityMapsBinding.txtJobStatus.setTextColor(Color.BLACK);
                     break;
                 case 3:
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE);
+                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE);
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE_CH);
+                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE_CH);
                     }
-                    txtJobStatus.setTextColor(Color.RED);
+                    activityMapsBinding.txtJobStatus.setTextColor(Color.RED);
                     break;
                 default:
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
                         builder.setMessage(Constants.ADHOC_ERROR_MESSAGE + adhocJob.getId())
                                 .setCancelable(false)
-                                .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                }).show();
+                                .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                         builder.setMessage(Constants.ADHOC_ERROR_MESSAGE_CH + adhocJob.getId())
                                 .setCancelable(false)
-                                .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                }).show();
+                                .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
                     }
                     break;
             }
@@ -1062,7 +922,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(@NonNull Location location) {
 
 //        GeomagneticField field = new GeomagneticField(
 //                (float)location.getLatitude(),
@@ -1074,46 +934,42 @@ public class MapsActivity extends AppCompatActivity
         // getDeclination returns degrees
 //        mDeclination = field.getDeclination();
 
-        if (location != null) {
-            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy, H:mm:ss");
-            Calendar cal = Calendar.getInstance();
-            lastUpdatedDate = df.format(cal.getTime());
-            df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-            cal.setTime(new Date());
-            cal.add(Calendar.HOUR_OF_DAY, 8);
-            final Date adjustedDate = cal.getTime();
-            final String date = df.format(adjustedDate);
+        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy, H:mm:ss", Locale.ENGLISH);
+        Calendar cal = Calendar.getInstance();
+        lastUpdatedDate = df.format(cal.getTime());
+        df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH);
+        cal.setTime(new Date());
+        cal.add(Calendar.HOUR_OF_DAY, 8);
+        final Date adjustedDate = cal.getTime();
+        final String date = df.format(adjustedDate);
 
-            mLongitude = location.getLongitude();
-            mLatitude = location.getLatitude();
-            mAltitude = location.getAltitude();
-            mAccuracy = location.getAccuracy();
-            mSpeed = location.getSpeed();
-            mDate = date;
-            float bearing = location.getBearing();
+        mLongitude = location.getLongitude();
+        mLatitude = location.getLatitude();
+        mAltitude = location.getAltitude();
+        mAccuracy = location.getAccuracy();
+        mSpeed = location.getSpeed();
+        mDate = date;
+        float bearing = location.getBearing();
 
-            if (currentPosition != null) {
-                currentPosition.remove();
-            }
+        if (currentPosition != null) {
+            currentPosition.remove();
+        }
 //            mCurrentPositionLogo.position(currentlatLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)).rotation(bearing);
-            if (currentlatLng != null) {
-                mCurrentPositionLogo.position(currentlatLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus));
-                currentPosition = mMap.addMarker(mCurrentPositionLogo);
-            }
+        if (currentlatLng != null) {
+            mCurrentPositionLogo.position(currentlatLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus));
+            currentPosition = mMap.addMarker(mCurrentPositionLogo);
+        }
 
-            if (followUser) {
-                //zoom to current position
+        if (followUser) {
+            //zoom to current position
 
-                currentlatLng = new LatLng(mLatitude, mLongitude);
-                updateCameraBearing(mMap, bearing);
+            currentlatLng = new LatLng(mLatitude, mLongitude);
+            updateCameraBearing(mMap, bearing);
 //                CameraPosition cameraPosition = new CameraPosition.Builder().target(currentlatLng).bearing(bearing + 530).zoom(16).build();
 //                mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
 //                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            }
-            setNFCSettings(false);
-        } else {
-            toast("NO GPS. Please wait while we try to locate you.. ");
         }
+        setNFCSettings(false);
     }
 
     private void updateCameraBearing(GoogleMap googleMap, float bearing) {
@@ -1161,12 +1017,16 @@ public class MapsActivity extends AppCompatActivity
 //    }
 
     private void drawMarkersAndRoutes() {
-        if (jobs != null && jobs.size() > 0) {
+        if (routePoints != null && routePoints.size() > 0) {
+            busRoute = new PolylineOptions();
+            jobMarker = new MarkerOptions();
+            timeMarker = new MarkerOptions();
+
             if (!isAdhoc) {
                 //Route
                 routeCoordinatesList = new ArrayList<>();
-                for (int i = 0; i < routes.size(); i++) {
-                    routeCoordinatesList.add(new LatLng(routes.get(i).getLatitude(), routes.get(i).getLongitude()));
+                for (int i = 0; i < routePaths.size(); i++) {
+                    routeCoordinatesList.add(new LatLng(routePaths.get(i).getLatitude(), routePaths.get(i).getLongitude()));
                 }
                 busRoute.addAll(routeCoordinatesList).width(15.0f).color(Color.RED);
                 mMap.addPolyline(busRoute);
@@ -1174,8 +1034,8 @@ public class MapsActivity extends AppCompatActivity
 
             //Marker
             jobMarkerList = new ArrayList<>();
-            for (int i = 0; i < jobs.size(); i++) {
-                jobMarkerList.add(new LatLng(jobs.get(i).getLatitude(), jobs.get(i).getLongitude()));
+            for (int i = 0; i < routePoints.size(); i++) {
+                jobMarkerList.add(new LatLng(routePoints.get(i).getLatitude(), routePoints.get(i).getLongitude()));
             }
             proximityList = jobMarkerList;
 
@@ -1183,19 +1043,19 @@ public class MapsActivity extends AppCompatActivity
                 for (int i = 0; i < jobMarkerList.size(); i++) {
 //                    mCircle.center((new LatLng(jobMarkerList.get(i).latitude,jobMarkerList.get(i).longitude)));
 
-                    if (jobs.get(i).getType() == 1) {
+                    if (routePoints.get(i).getType() == 1) {
                         jobMarker.position(jobMarkerList.get(i))
-                                .title(jobs.get(i).getPointName())
-                                .snippet(jobs.get(i).getTime())
+                                .title(routePoints.get(i).getPointName())
+                                .snippet(routePoints.get(i).getTime())
                                 .icon(BitmapDescriptorFactory.fromBitmap
-                                        (writeNoOfPassengersOnMarker(R.drawable.blue_marker, "" + jobs.get(i).getNumberOfPassengers())));
+                                        (writeNoOfPassengersOnMarker(R.drawable.blue_marker, "" + routePoints.get(i).getNumberOfPassengers())));
 
-                    } else if (jobs.get(i).getType() == 0) {
+                    } else if (routePoints.get(i).getType() == 0) {
                         jobMarker.position(jobMarkerList.get(i))
-                                .title(jobs.get(i).getPointName())
-                                .snippet(jobs.get(i).getTime())
+                                .title(routePoints.get(i).getPointName())
+                                .snippet(routePoints.get(i).getTime())
                                 .icon(BitmapDescriptorFactory.fromBitmap
-                                        (writeNoOfPassengersOnMarker(R.drawable.green_marker, "" + jobs.get(i).getNumberOfPassengers())));
+                                        (writeNoOfPassengersOnMarker(R.drawable.green_marker, "" + routePoints.get(i).getNumberOfPassengers())));
                     } else {
                         if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
                             toast(Constants.GENERIC_ERROR_MSG);
@@ -1208,7 +1068,7 @@ public class MapsActivity extends AppCompatActivity
                     }
 
                     timeMarker.position((jobMarkerList.get(i)))
-                            .icon(BitmapDescriptorFactory.fromBitmap(writeTimeOnMarker(jobs.get(i).getTime())));
+                            .icon(BitmapDescriptorFactory.fromBitmap(writeTimeOnMarker(routePoints.get(i).getTime())));
 
                     mMap.addMarker(timeMarker);
                     mMap.addMarker(jobMarker);
@@ -1216,15 +1076,15 @@ public class MapsActivity extends AppCompatActivity
                 }
             } else {
                 for (int i = 0; i < jobMarkerList.size(); i++) {
-                    if (jobs.get(i).getType() == 1) {
+                    if (routePoints.get(i).getType() == 1) {
                         jobMarker.position(jobMarkerList.get(i))
-                                .title(jobs.get(i).getPointName())
-                                .snippet(jobs.get(i).getTime())
+                                .title(routePoints.get(i).getPointName())
+                                .snippet(routePoints.get(i).getTime())
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.blue_marker));
-                    } else if (jobs.get(i).getType() == 0) {
+                    } else if (routePoints.get(i).getType() == 0) {
                         jobMarker.position(jobMarkerList.get(i))
-                                .title(jobs.get(i).getPointName())
-                                .snippet(jobs.get(i).getTime())
+                                .title(routePoints.get(i).getPointName())
+                                .snippet(routePoints.get(i).getTime())
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.green_marker));
                     } else {
                         if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
@@ -1237,7 +1097,7 @@ public class MapsActivity extends AppCompatActivity
                         finish();
                     }
 
-                    String markerTime = jobs.get(i).getTime();
+                    String markerTime = routePoints.get(i).getTime();
                     timeMarker.position((jobMarkerList.get(i)))
                             .icon(BitmapDescriptorFactory.fromBitmap(writeTimeOnMarker(markerTime)));
 
@@ -1428,7 +1288,6 @@ public class MapsActivity extends AppCompatActivity
                         if (derivedDistance < MAXDISTANCEFORCHECKING) {
                             //Somehow setting it once doesnt work. Dont ask why.
                             String toCheckProximity = prefs.getString(Preferences.TO_CHECK_PROXIMITY, "");
-                            toCheckProximity = prefs.getString(Preferences.TO_CHECK_PROXIMITY, "");
                             Log.d("Test", toCheckProximity);
                             if (StringUtil.deNull(toCheckProximity).isEmpty() || toCheckProximity.equalsIgnoreCase("Yes")) {
                                 final SharedPreferences.Editor editor = prefs.edit();
@@ -1440,129 +1299,79 @@ public class MapsActivity extends AppCompatActivity
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.zero);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 1) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.one);
-                                        ivResult.setImageResource(R.drawable.number_one_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_one_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 2) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.two);
-                                        ivResult.setImageResource(R.drawable.number_two_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_two_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 3) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.three);
-                                        ivResult.setImageResource(R.drawable.number_three_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_three_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 4) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.four);
-                                        ivResult.setImageResource(R.drawable.number_four_in_circular_button);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_four_in_circular_button);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 5) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.five);
-                                        ivResult.setImageResource(R.drawable.number_five_in_circular_button);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_five_in_circular_button);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 6) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.six);
-                                        ivResult.setImageResource(R.drawable.number_six_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_six_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 7) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.seven);
-                                        ivResult.setImageResource(R.drawable.number_seven_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_seven_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 8) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.eight);
-                                        ivResult.setImageResource(R.drawable.number_eight_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_eight_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     } else if (noOfPassengers == 9) {
                                         final MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.nine);
-                                        ivResult.setImageResource(R.drawable.number_nine_in_a_circle);
-                                        ivResult.setVisibility(View.VISIBLE);
-                                        fadeOutAndHideView(ivResult);
+                                        activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.number_nine_in_a_circle);
+                                        activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+                                        fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
                                         proximityList.remove(i);
                                         proxmityCheck.remove(i);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mediaPlayer.start();
-                                            }
-                                        });
+                                        runOnUiThread(mediaPlayer::start);
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -1601,16 +1410,16 @@ public class MapsActivity extends AppCompatActivity
 
         try {
             if (isFound) {
-                ivResult.setImageResource(R.drawable.ok);
+                activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.ok);
                 textToShow = name + ", " + gender;
                 mediaPlayer = MediaPlayer.create(this, R.raw.correct);
             } else {
                 if (canId.contains("Error")) {
-                    ivResult.setImageResource(R.drawable.unknown);
+                    activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.unknown);
                     textToShow = "Unable to detect card. Please tap again.\n请再次打卡!";
                     mediaPlayer = MediaPlayer.create(this, R.raw.unknown);
                 } else {
-                    ivResult.setImageResource(R.drawable.wrong);
+                    activityMapsBinding.ivPassengerResult.setImageResource(R.drawable.wrong);
                     textToShow = "Unable to identify passenger!\n无法验证乘客的身份!";
                     mediaPlayer = MediaPlayer.create(this, R.raw.failure);
                 }
@@ -1621,20 +1430,15 @@ public class MapsActivity extends AppCompatActivity
                 textToShow += "\n" + canId;
             }
 
-            txtResult.setText(textToShow);
+            activityMapsBinding.txtPassengerName.setText(textToShow);
 
-            ivResult.setVisibility(View.VISIBLE);
-            fadeOutAndHideView(ivResult);
+            activityMapsBinding.ivPassengerResult.setVisibility(View.VISIBLE);
+            fadeOutAndHideView(activityMapsBinding.ivPassengerResult);
 
-            txtResult.setVisibility(View.VISIBLE);
-            fadeOutAndHideView(txtResult);
+            activityMapsBinding.txtPassengerName.setVisibility(View.VISIBLE);
+            fadeOutAndHideView(activityMapsBinding.txtPassengerName);
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mediaPlayer.start();
-                }
-            });
+            runOnUiThread(mediaPlayer::start);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1650,7 +1454,7 @@ public class MapsActivity extends AppCompatActivity
         String name = "Unknown";
         String gender = "Unknown";
         int size = 0;
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH);
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         cal.add(Calendar.HOUR_OF_DAY, 8);
@@ -1698,6 +1502,7 @@ public class MapsActivity extends AppCompatActivity
         if (playNotification) {
             isPassengerFound(isFound, name, gender, canId);
         }
+        editor.apply();
     }
 
     private void setBlinkingView(TextView view) {
@@ -1843,21 +1648,17 @@ public class MapsActivity extends AppCompatActivity
                 builder.setMessage(Constants.GPS_OFF)
                         .setTitle("Warning! - GPS is off.")
                         .setCancelable(false)
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialogInterface = dialog;
-                                startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
-                            }
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            dialogInterface = dialog;
+                            startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
                         }).setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
             } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                 builder.setMessage(Constants.GPS_OFF_CH)
                         .setCancelable(false)
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialogInterface = dialog;
-                                startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
-                            }
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            dialogInterface = dialog;
+                            startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
                         }).setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
             }
@@ -1871,24 +1672,18 @@ public class MapsActivity extends AppCompatActivity
                     builder.setMessage(Constants.INTERNAL_NFC_NULL)
                             .setTitle("Warning! - No NFC detected.")
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    startActivity(new Intent(MapsActivity.this, SettingsActivity.class));
-                                }
-                            }).setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton("OK", (dialog, which) -> startActivity(new Intent(MapsActivity.this, SettingsActivity.class))).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
                 } else if (!adapter.isEnabled()) {
                     builder.setMessage(Constants.INTERNAL_NFC_OFF)
                             .setTitle("Warning! - NFC is off.")
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialogInterface = dialog;
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                        startActivityForResult(new Intent(Settings.ACTION_NFC_SETTINGS), CHECK_NFC_ON);
-                                    } else {
-                                        startActivityForResult(new Intent(Settings.ACTION_WIRELESS_SETTINGS), CHECK_NFC_ON);
-                                    }
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                dialogInterface = dialog;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    startActivityForResult(new Intent(Settings.ACTION_NFC_SETTINGS), CHECK_NFC_ON);
+                                } else {
+                                    startActivityForResult(new Intent(Settings.ACTION_WIRELESS_SETTINGS), CHECK_NFC_ON);
                                 }
                             }).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
@@ -1901,23 +1696,17 @@ public class MapsActivity extends AppCompatActivity
                 if (adapter == null) {
                     builder.setMessage(Constants.INTERNAL_NFC_NULL_CH)
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    startActivity(new Intent(MapsActivity.this, SettingsActivity.class));
-                                }
-                            }).setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton("OK", (dialog, which) -> startActivity(new Intent(MapsActivity.this, SettingsActivity.class))).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
                 } else if (!adapter.isEnabled()) {
                     builder.setMessage(Constants.INTERNAL_NFC_OFF_CH)
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialogInterface = dialog;
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                        startActivityForResult(new Intent(Settings.ACTION_NFC_SETTINGS), CHECK_NFC_ON);
-                                    } else {
-                                        startActivityForResult(new Intent(Settings.ACTION_WIRELESS_SETTINGS), CHECK_NFC_ON);
-                                    }
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                dialogInterface = dialog;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    startActivityForResult(new Intent(Settings.ACTION_NFC_SETTINGS), CHECK_NFC_ON);
+                                } else {
+                                    startActivityForResult(new Intent(Settings.ACTION_WIRELESS_SETTINGS), CHECK_NFC_ON);
                                 }
                             }).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
@@ -1935,21 +1724,15 @@ public class MapsActivity extends AppCompatActivity
                     builder.setMessage(Constants.EXTERNAL_NFC_NULL)
                             .setTitle("Warning! - No Bluetooth detected.")
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    startActivity(new Intent(MapsActivity.this, SettingsActivity.class));
-                                }
-                            }).setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton("OK", (dialog, which) -> startActivity(new Intent(MapsActivity.this, SettingsActivity.class))).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
                 } else if (!mBluetoothAdapter.isEnabled()) {
                     builder.setMessage(Constants.EXTERNAL_NFC_OFF)
                             .setTitle("Warning! - Bluetooth is off.")
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialogInterface = dialog;
-                                    startActivityForResult(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), CHECK_BLUETOOTH_ON);
-                                }
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                dialogInterface = dialog;
+                                startActivityForResult(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), CHECK_BLUETOOTH_ON);
                             }).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
                 }
@@ -1958,20 +1741,14 @@ public class MapsActivity extends AppCompatActivity
                     // Device does not support Bluetooth
                     builder.setMessage(Constants.EXTERNAL_NFC_NULL_CH)
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    startActivity(new Intent(MapsActivity.this, SettingsActivity.class));
-                                }
-                            }).setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton("OK", (dialog, which) -> startActivity(new Intent(MapsActivity.this, SettingsActivity.class))).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
                 } else if (!mBluetoothAdapter.isEnabled()) {
                     builder.setMessage(Constants.EXTERNAL_NFC_OFF_CH)
                             .setCancelable(false)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialogInterface = dialog;
-                                    startActivityForResult(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), CHECK_BLUETOOTH_ON);
-                                }
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                dialogInterface = dialog;
+                                startActivityForResult(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), CHECK_BLUETOOTH_ON);
                             }).setIcon(android.R.drawable.ic_dialog_alert)
                             .show();
                 }
@@ -2041,7 +1818,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void resetApp() {
-        prefs.edit().clear().commit();
+        prefs.edit().clear().apply();
         MapsActivity.this.finishAffinity();
         Intent i = new Intent(context, LoginActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -2077,9 +1854,6 @@ public class MapsActivity extends AppCompatActivity
         try {
             mPassengersInfoTask = new PassengersInfoTask();
             mPassengersInfoTask.execute((Void) null);
-            busRoute = new PolylineOptions();
-            jobMarker = new MarkerOptions();
-            timeMarker = new MarkerOptions();
 
             editor.putInt(Preferences.PASSENGERCOUNT, passengers.size());
             editor.putBoolean(Preferences.ENABLE_INTERNAL_NFC, enableInternalNFC);
@@ -2107,96 +1881,66 @@ public class MapsActivity extends AppCompatActivity
 
     //Bluetooth Reader - START
     private void setListener(BluetoothReader reader) {
-        reader.setOnCardStatusChangeListener(new OnCardStatusChangeListener() {
-            @Override
-            public void onCardStatusChange(BluetoothReader bluetoothReader, final int sta) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (sta == 1) {
-                            Log.v(LOG_TAG, "Card Absent");
-                        } else if (sta == 2) {
-                            Log.v(LOG_TAG, "Card Present");
-                            byte[] apdu1 = StringUtil.hexString2Bytes(Constants.APDU1);
-                            mBluetoothReader.transmitApdu(apdu1);
-                            hasSentApdu1 = true;
-                        }
-                    }
-                });
-            }
-        });
+        reader.setOnCardStatusChangeListener((bluetoothReader, sta) ->
+            runOnUiThread(() -> {
+                if (sta == 1) {
+                    Log.v(LOG_TAG, "Card Absent");
+                } else if (sta == 2) {
+                    Log.v(LOG_TAG, "Card Present");
+                    byte[] apdu1 = StringUtil.hexString2Bytes(Constants.APDU1);
+                    mBluetoothReader.transmitApdu(apdu1);
+                    hasSentApdu1 = true;
+                }
+            })
+        );
 
-        reader.setOnAuthenticationCompleteListener(new OnAuthenticationCompleteListener() {
-            @Override
-            public void onAuthenticationComplete(BluetoothReader bluetoothReader, final int errorCode) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (errorCode == BluetoothReader.ERROR_SUCCESS) {
-                            Log.v(LOG_TAG, "Authentication Success!");
-                            isAuthenticated = true;
-                        } else {
-                            Log.v(LOG_TAG, "Authentication Failed!");
-                        }
-                    }
-                });
-            }
-        });
+        reader.setOnAuthenticationCompleteListener((bluetoothReader, errorCode) ->
+            runOnUiThread(() -> {
+                if (errorCode == BluetoothReader.ERROR_SUCCESS) {
+                    Log.v(LOG_TAG, "Authentication Success!");
+                    isAuthenticated = true;
+                } else {
+                    Log.v(LOG_TAG, "Authentication Failed!");
+                }
+            })
+        );
 
-        reader.setOnResponseApduAvailableListener(new OnResponseApduAvailableListener() {
-            @Override
-            public void onResponseApduAvailable(BluetoothReader bluetoothReader, final byte[] apdu, final int errorCode) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (hasSentApdu1) {
-                            byte[] apdu2 = StringUtil.hexString2Bytes(Constants.APDU2);
-                            mBluetoothReader.transmitApdu(apdu2);
-                            hasSentApdu1 = false;
-                        } else {
-                            String result = StringUtil.toHexString(apdu);
-                            result = result.replaceAll("\\s+", "");
-                            if (result.length() > 32) {
-                                String canId = result.substring(16, 32);
-                                checkPassengerList(canId, true);
-                            } else {
-                                String canId = "Error";
-                                checkPassengerList(canId, true);
-                            }
-                        }
+        reader.setOnResponseApduAvailableListener((bluetoothReader, apdu, errorCode) ->
+            runOnUiThread(() -> {
+                if (hasSentApdu1) {
+                    byte[] apdu2 = StringUtil.hexString2Bytes(Constants.APDU2);
+                    mBluetoothReader.transmitApdu(apdu2);
+                    hasSentApdu1 = false;
+                } else {
+                    String result = StringUtil.toHexString(apdu);
+                    result = result.replaceAll("\\s+", "");
+                    if (result.length() > 32) {
+                        String canId = result.substring(16, 32);
+                        checkPassengerList(canId, true);
+                    } else {
+                        String canId = "Error";
+                        checkPassengerList(canId, true);
                     }
-                });
-            }
-        });
+                }
+            })
+        );
 
-        reader.setOnCardStatusAvailableListener(new OnCardStatusAvailableListener() {
-            @Override
-            public void onCardStatusAvailable(BluetoothReader bluetoothReader, final int cardStatus, final int errorCode) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(LOG_TAG, "Testing");
-                        //TODO: to check this
-                    }
-                });
-            }
-        });
+        reader.setOnCardStatusAvailableListener((bluetoothReader, cardStatus, errorCode) ->
+            runOnUiThread(() -> {
+                Log.v(LOG_TAG, "Testing");
+                //TODO: to check this
+            })
+        );
 
-        reader.setOnEnableNotificationCompleteListener(new OnEnableNotificationCompleteListener() {
-            @Override
-            public void onEnableNotificationComplete(BluetoothReader bluetoothReader, final int result) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (result != BluetoothGatt.GATT_SUCCESS) {
-                            Log.v(LOG_TAG, "The device is unable to set notification!");
-                        } else {
-                            Log.v(LOG_TAG, "The device is ready to use!");
-                        }
-                    }
-                });
-            }
-        });
+        reader.setOnEnableNotificationCompleteListener((bluetoothReader, result) ->
+            runOnUiThread(() -> {
+                if (result != BluetoothGatt.GATT_SUCCESS) {
+                    Log.v(LOG_TAG, "The device is unable to set notification!");
+                } else {
+                    Log.v(LOG_TAG, "The device is ready to use!");
+                }
+            })
+        );
     }
 
     private void connectReader() {
@@ -2204,8 +1948,8 @@ public class MapsActivity extends AppCompatActivity
             if (isAuthenticated) {
                 if (mBluetoothReader.transmitEscapeCommand(Constants.PAIRING_COMMAND)) {
                     bmBluetooth = BitmapFactory.decodeResource(resources, R.drawable.signal_green);
-                    ivNFCConnectionStatus.setImageBitmap(bmBluetooth);
-                    ivNFCConnectionStatus.invalidate();
+                    activityMapsBinding.ivNfcConnectionStatus.setImageBitmap(bmBluetooth);
+                    activityMapsBinding.ivNfcConnectionStatus.invalidate();
                 }
             } else {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -2213,22 +1957,12 @@ public class MapsActivity extends AppCompatActivity
                     builder.setMessage(Constants.ON_NO_DEVICE_DECTECTED)
                             .setTitle("Error!")
                             .setCancelable(false)
-                            .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            }).show();
+                            .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
                 } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                     builder.setMessage(Constants.ON_NO_DEVICE_DECTECTED_CH)
                             .setTitle("Error!")
                             .setCancelable(false)
-                            .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            }).show();
+                            .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
                 }
             }
         } catch (Exception e) {
@@ -2237,22 +1971,12 @@ public class MapsActivity extends AppCompatActivity
                 builder.setMessage(Constants.ON_NO_DEVICE_DECTECTED)
                         .setTitle("Error!")
                         .setCancelable(false)
-                        .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).show();
+                        .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
             } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                 builder.setMessage(Constants.ON_NO_DEVICE_DECTECTED_CH)
                         .setTitle("Error!")
                         .setCancelable(false)
-                        .setPositiveButton("Understood", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).show();
+                        .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
             }
         }
     }
@@ -2266,67 +1990,33 @@ public class MapsActivity extends AppCompatActivity
             if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
                 builder.setMessage(Constants.UNAUTHORISED_MESSAGE)
                         .setCancelable(false)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                resetApp();
-                            }
-                        }).show();
+                        .setPositiveButton("Ok", (dialog, which) -> resetApp())
+                        .show();
             } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                 builder.setMessage(Constants.UNAUTHORISED_MESSAGE_CH)
                         .setCancelable(false)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                resetApp();
-                            }
-                        }).show();
+                        .setPositiveButton("Ok", (dialog, which) -> resetApp())
+                        .show();
             }
         } else if (!driverRole.equalsIgnoreCase("BA")) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
                 builder.setTitle("Error!")
                         .setMessage(Constants.RETRY_MESSAGE)
-                        .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                refreshActivity();
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                builder.setTitle("Warning!")
-                                        .setMessage(Constants.RETRY_MESSAGE2)
-                                        .setNegativeButton("Yes", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        }).show();
-                            }
-                        }).show();
+                        .setPositiveButton("Retry", (dialog, which) -> loadJob())
+                        .setNegativeButton("Cancel", (dialog, which) -> builder.setTitle("Warning!")
+                                .setMessage(Constants.RETRY_MESSAGE2)
+                                .setNegativeButton("Yes", (dialog12, which12) -> dialog12.dismiss())
+                                .show())
+                        .show();
             } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
                 builder.setMessage(Constants.RETRY_MESSAGE_CH)
-                        .setPositiveButton("重试连接", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                refreshActivity();
-                            }
-                        })
-                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                builder.setTitle("Warning!")
-                                        .setMessage(Constants.RETRY_MESSAGE2_CH)
-                                        .setNegativeButton("是的", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        }).show();
-                            }
-                        }).show();
+                        .setPositiveButton("重试连接", (dialog, which) -> loadJob())
+                        .setNegativeButton("取消", (dialog, which) -> builder.setTitle("Warning!")
+                                .setMessage(Constants.RETRY_MESSAGE2_CH)
+                                .setNegativeButton("是的", (dialog1, which1) -> dialog1.dismiss())
+                                .show())
+                        .show();
             }
         }
     }
@@ -2458,35 +2148,27 @@ public class MapsActivity extends AppCompatActivity
 
         Button acceptBtn = (Button) promptView.findViewById(R.id.btn_acceptCharter);
         acceptBtn.setText("Select this device");
-        acceptBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deviceName = (String) mReaderSpinner.getSelectedItem();
-                if (deviceName != null) {
-                    // For each device
-                    for (UsbDevice device : mManager.getDeviceList().values()) {
-                        // If device name is found
-                        if (deviceName.equals(device.getDeviceName())) {
-                            // Request permission
-                            mManager.requestPermission(device, mPermissionIntent);
-                            mDevice[0] = device;
-                            alertDialog.dismiss();
+        acceptBtn.setOnClickListener(v -> {
+            deviceName = (String) mReaderSpinner.getSelectedItem();
+            if (deviceName != null) {
+                // For each device
+                for (UsbDevice device : mManager.getDeviceList().values()) {
+                    // If device name is found
+                    if (deviceName.equals(device.getDeviceName())) {
+                        // Request permission
+                        mManager.requestPermission(device, mPermissionIntent);
+                        mDevice[0] = device;
+                        alertDialog.dismiss();
 
-                            break;
-                        }
+                        break;
                     }
                 }
             }
         });
 
-        Button cancelSelectionBtn = (Button) promptView.findViewById(R.id.btn_reselectCharter);
+        Button cancelSelectionBtn = promptView.findViewById(R.id.btn_reselectCharter);
         cancelSelectionBtn.setText("Cancel and return to map");
-        cancelSelectionBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-            }
-        });
+        cancelSelectionBtn.setOnClickListener(v -> alertDialog.dismiss());
 
         return alertDialog;
     }
@@ -2540,8 +2222,7 @@ public class MapsActivity extends AppCompatActivity
                 jsonObject = obj.optJSONObject(Constants.DATA);
 
                 if (jsonObject == null) {
-                    lnrFourDigit = (LinearLayout) findViewById(R.id.lnrFourDigit);
-                    lnrFourDigit.setVisibility(View.GONE);
+                    activityMapsBinding.txtBoardingCode.setText("No job available for today");
                     onFailedAttempt();
                     return false;
                 } else {
@@ -2558,20 +2239,18 @@ public class MapsActivity extends AppCompatActivity
                         onFailedAttempt();
                         return false;
                     }
-                    txtBoardingCode = (TextView) findViewById(R.id.txt_boardingCode);
-                    txtFourDigit = (TextView) findViewById(R.id.txt_fourDigit);
-
-                    txtFourDigit.setText(fourDigitCode);
+                    activityMapsBinding.txtFourDigit.setText(fourDigitCode);
+                    activityMapsBinding.txtFourDigit.setVisibility(View.VISIBLE);
 
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_EN);
+                        activityMapsBinding.txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_EN);
                     } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_CN);
+                        activityMapsBinding.txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_CN);
                     }
 
                     if (fourDigitCode.isEmpty()) {
-                        lnrFourDigit = (LinearLayout) findViewById(R.id.lnrFourDigit);
-                        lnrFourDigit.setVisibility(View.GONE);
+                        activityMapsBinding.txtBoardingCode.setText("Current job: " + codeName);
+                        activityMapsBinding.txtFourDigit.setVisibility(View.GONE);
 
                         if (isSchoolBus) {
                             final Dialog builder = new Dialog(MapsActivity.this);
@@ -2593,12 +2272,9 @@ public class MapsActivity extends AppCompatActivity
                             }
                             txtFourDigitDialog.setText("");
 
-                            btnOkDialog.setOnClickListener(new OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Toast.makeText(MapsActivity.this, "Welcome", Toast.LENGTH_SHORT).show();
-                                    builder.dismiss();
-                                }
+                            btnOkDialog.setOnClickListener(v -> {
+                                Toast.makeText(MapsActivity.this, "Welcome", Toast.LENGTH_SHORT).show();
+                                builder.dismiss();
                             });
                             builder.setContentView(view);
                             builder.show();
@@ -2623,12 +2299,9 @@ public class MapsActivity extends AppCompatActivity
                         }
                         txtFourDigitDialog.setText(fourDigitCode);
 
-                        btnOkDialog.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Toast.makeText(MapsActivity.this, "Welcome", Toast.LENGTH_SHORT).show();
-                                builder.dismiss();
-                            }
+                        btnOkDialog.setOnClickListener(v -> {
+                            Toast.makeText(MapsActivity.this, "Welcome", Toast.LENGTH_SHORT).show();
+                            builder.dismiss();
                         });
                         builder.setContentView(view);
                         builder.show();
@@ -2658,28 +2331,28 @@ public class MapsActivity extends AppCompatActivity
                         onFailedAttempt();
                         return false;
                     }
-                    //route
-                    JSONArray routeArray = jsonObject.optJSONArray(Constants.ROUTE);
-                    routes = new ArrayList<>();
+                    // routePaths
+                    JSONArray routeArray = jsonObject.optJSONArray(Constants.ROUTE_PATH);
+                    routePaths = new ArrayList<>();
                     try {
                         for (int i = 0; i < routeArray.length(); i++) {
                             objPx = routeArray.getJSONObject(i);
                             Double routeLat = objPx.getDouble(Constants.LATITUDE);
                             Double routeLon = objPx.getDouble(Constants.LONGTITUDE);
-                            Routes route = new Routes(routeLon, routeLat);
-                            Log.d(LOG_TAG, route.toString());
+                            RoutePath path = new RoutePath(routeLon, routeLat);
+                            Log.d(LOG_TAG, path.toString());
 
-                            routes.add(route);
+                            routePaths.add(path);
                         }
                     } catch (JSONException e) {
                         Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
                         onFailedAttempt();
                         return false;
                     }
-                    //jobs
-                    JSONArray jobArray = jsonObject.optJSONArray(Constants.JOBS);
+                    // routePoints
+                    JSONArray jobArray = jsonObject.optJSONArray(Constants.ROUTE_POINTS);
                     isShareTransport = false;
-                    jobs = new ArrayList<>();
+                    routePoints = new ArrayList<>();
                     try {
                         for (int i = 0; i < jobArray.length(); i++) {
                             objPx = jobArray.getJSONObject(i);
@@ -2694,12 +2367,12 @@ public class MapsActivity extends AppCompatActivity
                                 isShareTransport = true;
                             }
 
-                            Jobs job = new Jobs(pointName, routeLon, routeLat, type, time, numberOfPassengers);
+                            RoutePoint job = new RoutePoint(pointName, routeLon, routeLat, type, time, numberOfPassengers);
                             Log.d(LOG_TAG, job.toString());
 
-                            jobs.add(job);
+                            routePoints.add(job);
                         }
-                        proxmityCheck = jobs;
+                        proxmityCheck = routePoints;
                     } catch (JSONException e) {
                         Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
                         onFailedAttempt();
@@ -2715,21 +2388,21 @@ public class MapsActivity extends AppCompatActivity
 
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putString(Preferences.ADHOC_CHARTER_ID, id);
-                        editor.commit();
+                        editor.apply();
 
                         adhocJob = new Adhoc(id, jobStatus, pocName, pocContactNo);
                         Log.d(LOG_TAG, adhocJob.toString());
                         isAdhoc = true;
                         if (jobStatus == 99) {
                             editor.putString(Preferences.ADHOC_CHARTER_ID, "");
-                            editor.commit();
+                            editor.apply();
                             isAdhoc = false;
                         }
                     } catch (JSONException e) {
                         onFailedAttempt();
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putString(Preferences.ADHOC_CHARTER_ID, "");
-                        editor.commit();
+                        editor.apply();
                         isAdhoc = false;
                     }
                     //if everything ok, set to true
@@ -2742,11 +2415,187 @@ public class MapsActivity extends AppCompatActivity
         @Override
         public void performSuccessfulOperation() {
             Log.d(LOG_TAG, "Data Retrieved Successful!");
+
+            activityMapsBinding.btnEndRoute.setVisibility(View.VISIBLE);
+            activityMapsBinding.btnReload.setVisibility(View.GONE);
         }
 
         @Override
         public void onFailedAttempt() {
             displayErrorMessage();
+        }
+    }
+    private class JobScheduleTask extends WebServiceTask {
+        JobScheduleTask() {
+            super(MapsActivity.this);
+            performRequest();
+        }
+
+        @Override
+        public void showProgress() {
+            if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                toast("Receiving job schedule from server...");
+            } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                toast("正在加载工作。。。");
+            }
+
+        }
+
+        @Override
+        public void hideProgress() {
+
+        }
+
+        @Override
+        public boolean performRequest() {
+
+            obj = WebServiceUtils.requestJSONObject(Constants.ALL_JOBS_URL, WebServiceUtils.METHOD.GET, authenticationToken, context);
+
+//            Boolean isSuccessful = false;
+            if (!hasError(obj)) {
+
+                JSONArray jsonArray = obj.optJSONArray(Constants.DATA);
+
+                if (jsonArray == null) {
+                    onFailedAttempt();
+                    return false;
+                } else {
+                    List<List<Job>> allJobList = new ArrayList<>();
+
+                    try {
+                        // loop to get job list for today and tomorrow
+                        for(int i = 0; i < 2; i++){
+                            JSONArray jobListJson = jsonArray.getJSONArray(i);
+                            List<Job> jobList = new ArrayList<>();
+
+                            // loop to get job data
+                            for(int j = 0; j < jobListJson.length(); j++){
+                                jsonObject = jobListJson.getJSONObject(j);
+                                String jobName = jsonObject.getString(Constants.CODENAME);
+
+                                // routePaths
+                                JSONArray routeArray = jsonObject.optJSONArray(Constants.ROUTE_PATH);
+                                ArrayList<RoutePath> routePathList = new ArrayList<>();
+                                try {
+                                    for (int k = 0; k < routeArray.length(); k++) {
+                                        Double routeLat = routeArray.getJSONObject(k).getDouble(Constants.LATITUDE);
+                                        Double routeLon = routeArray.getJSONObject(k).getDouble(Constants.LONGTITUDE);
+                                        RoutePath path = new RoutePath(routeLon, routeLat);
+                                        Log.d(LOG_TAG, path.toString());
+
+                                        routePathList.add(path);
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
+                                    onFailedAttempt();
+                                    return false;
+                                }
+                                // routePoints
+                                JSONArray jobArray = jsonObject.optJSONArray(Constants.ROUTE_POINTS);
+                                ArrayList<RoutePoint> routePointList = new ArrayList<>();
+                                try {
+                                    for (int l = 0; l < jobArray.length(); l++) {
+                                        String pointName = jobArray.getJSONObject(l).getString(Constants.POINTNAME);
+                                        Double routeLat = jobArray.getJSONObject(l).getDouble(Constants.LATITUDE);
+                                        Double routeLon = jobArray.getJSONObject(l).getDouble(Constants.LONGTITUDE);
+                                        Integer type = jobArray.getJSONObject(l).getInt(Constants.TYPE);
+                                        String time = jobArray.getJSONObject(l).getString(Constants.TIME);
+                                        int numberOfPassengers = jobArray.getJSONObject(l).getInt(Constants.NOOFPASSENERS);
+
+                                        RoutePoint job = new RoutePoint(pointName, routeLon, routeLat, type, time, numberOfPassengers);
+                                        Log.d(LOG_TAG, job.toString());
+
+                                        routePointList.add(job);
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
+                                    onFailedAttempt();
+                                    return false;
+                                }
+
+                                Job job = new Job(jobName, routePathList, routePointList);
+                                jobList.add(job);
+                            }
+
+                            allJobList.add(jobList);
+                        }
+
+                        RouteAdapter adapter = new RouteAdapter(allJobList.get(0), getApplicationContext(), codeName, isTodaySelected);
+                        adapter.setOnClickListener((position, model) -> {
+                            adapter.setToday(isTodaySelected);
+                            if(model.getJobName().equals(codeName)){
+                                activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
+                            } else {
+                                activityMapsBinding.btnEndRoute.setVisibility(View.GONE);
+                                activityMapsBinding.btnReload.setVisibility(View.VISIBLE);
+                                activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
+
+                                routePaths = model.getRoutePaths();
+                                routePoints = model.getRoutePoints();
+                                mMap.clear();
+                                drawMarkersAndRoutes();
+
+                                codeName = model.getJobName();
+                                activityMapsBinding.txtBoardingCode.setText("Viewing job " + codeName);
+                            }
+                        });
+                        activityMapsBinding.recyclerViewJobSchedule.setAdapter(adapter);
+                        activityMapsBinding.recyclerViewJobSchedule.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+
+                        activityMapsBinding.btnRouteToday.setOnClickListener(v -> {
+                            isTodaySelected = true;
+                            if(adapter.isToday()){
+                                adapter.setCurrentJobName(codeName);
+                            } else {
+                                adapter.setCurrentJobName(null);
+                            }
+                            adapter.setJobData(allJobList.get(0));
+                            adapter.notifyDataSetChanged();
+                            activityMapsBinding.btnRouteToday.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorActivated)));
+                            activityMapsBinding.btnRouteTmr.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorIdle)));
+                        });
+                        activityMapsBinding.btnRouteTmr.setOnClickListener(v -> {
+                            isTodaySelected = false;
+                            if(!adapter.isToday()){
+                                adapter.setCurrentJobName(codeName);
+                            } else {
+                                adapter.setCurrentJobName(null);
+                            }
+                            adapter.setJobData(allJobList.get(1));
+                            adapter.notifyDataSetChanged();
+                            activityMapsBinding.btnRouteToday.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorIdle)));
+                            activityMapsBinding.btnRouteTmr.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorActivated)));
+                        });
+                        activityMapsBinding.flPopupWindow.setVisibility(View.VISIBLE);
+
+                        activityMapsBinding.btnClosePopup.setOnClickListener(v -> {
+                            activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
+                            isTodaySelected = true;
+                        });
+
+                    } catch (JSONException e) {
+                        Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
+                        onFailedAttempt();
+                        return false;
+                    }
+
+
+
+                    //if everything ok, set to true
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void performSuccessfulOperation() {
+            Log.d(LOG_TAG, "Data Retrieved Successfully!");
+        }
+
+        @Override
+        public void onFailedAttempt() {
+            toast("Error loading job schedule, please try again...");
         }
     }
 
@@ -2784,7 +2633,7 @@ public class MapsActivity extends AppCompatActivity
             for (int i = 0; i < count; i++) {
                 obj = WebServiceUtils.requestJSONObject(Constants.LOCATION_URL, WebServiceUtils.METHOD.POST, authenticationToken, contentValues);
                 Log.d(LOG_TAG, "Attempt " + (i + 1) + "::" + (obj == null ? "null" : obj.toString()));
-                if (obj != null) {
+                if (!hasError(obj)) {
                     jsonObject = obj.optJSONObject("data");
                     if ((jsonObject.optString(Constants.BUS_CHARTER_MESSAGE).equalsIgnoreCase("Updated"))) {
                         editor.putString(Preferences.LAST_UPDATED_TIME, lastUpdatedDate);
@@ -2844,13 +2693,14 @@ public class MapsActivity extends AppCompatActivity
             obj = WebServiceUtils.requestJSONObject(Constants.ATTENDANCE_URL,
                     WebServiceUtils.METHOD.POST, authenticationToken, null, passengerRecords, true);
             passengerRecords.clear();
-            Log.d(LOG_TAG, obj.toString());
-            jsonObject = obj.optJSONObject("data");
-            if (jsonObject != null) {
-                if ((jsonObject.optString(Constants.BUS_CHARTER_MESSAGE).equalsIgnoreCase("Updated"))) {
-                    return true;
+            if (obj != null) {
+                Log.d(LOG_TAG, obj.toString());
+                jsonObject = obj.optJSONObject("data");
+                if (jsonObject != null) {
+                    return jsonObject.optString(Constants.BUS_CHARTER_MESSAGE).equalsIgnoreCase("Updated");
                 }
             }
+
             return false;
         }
 
@@ -2890,7 +2740,7 @@ public class MapsActivity extends AppCompatActivity
         @Override
         public boolean performRequest() {
             obj = WebServiceUtils.requestJSONObject(Constants.START_TRIP_URL, WebServiceUtils.METHOD.POST, authenticationToken, null, context, contentValues);
-            Boolean isSuccessful = false;
+            boolean isSuccessful = false;
             if (!hasError(obj)) {
                 Log.d(LOG_TAG, obj.toString());
                 jsonObject = obj.optJSONObject(Constants.DATA);
@@ -2955,7 +2805,7 @@ public class MapsActivity extends AppCompatActivity
         @Override
         public boolean performRequest() {
             obj = WebServiceUtils.requestJSONObject(Constants.END_TRIP_URL, WebServiceUtils.METHOD.POST, authenticationToken, null, context, contentValues);
-            Boolean isSuccessful = false;
+            boolean isSuccessful = false;
             if (!hasError(obj)) {
                 Log.d(LOG_TAG, obj.toString());
                 jsonObject = obj.optJSONObject(Constants.DATA);
@@ -2992,6 +2842,62 @@ public class MapsActivity extends AppCompatActivity
             final AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setMessage(message)
                     .setCancelable(true).show();
+        }
+    }
+
+    private class EndTripRouteTask extends WebServiceTask {
+        EndTripRouteTask(String charterId) {
+            super(MapsActivity.this);
+
+            contentValues = new ContentValues();
+            contentValues.put(Constants.BUS_CHARTER_ID, charterId);
+//            contentValues.put(Constants.EXCEEDEDTIME, minutes);
+
+            performRequest();
+        }
+
+        @Override
+        public void showProgress() {
+
+        }
+
+        @Override
+        public void hideProgress() {
+
+        }
+
+        @Override
+        public boolean performRequest() {
+            obj = WebServiceUtils.requestJSONObject(Constants.END_TRIP_ROUTE_URL, WebServiceUtils.METHOD.POST, authenticationToken, null, context, contentValues);
+            boolean isSuccessful = false;
+            if (!hasError(obj)) {
+                Log.d(LOG_TAG, obj.toString());
+                jsonObject = obj.optJSONObject(Constants.DATA);
+                message = "";
+                if (jsonObject != null) {
+                    try {
+                        isSuccessful = jsonObject.getBoolean(Constants.BUS_CHARTER_SUCCESS);
+                        message = jsonObject.getString(Constants.BUS_CHARTER_MESSAGE);
+                    } catch (JSONException e) {
+                        Log.e(LOG_TAG, "Error processing Json data = " + e.getMessage());
+                    }
+                }
+            }
+            return isSuccessful;
+        }
+
+        @Override
+        public void performSuccessfulOperation() {
+            Log.d(LOG_TAG, "End Route Trip Successful!");
+            activityMapsBinding.btnEndRoute.showResultIcon(true, true);
+            loadJob();
+        }
+
+        @Override
+        public void onFailedAttempt() {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setMessage(message).show();
+            activityMapsBinding.btnEndRoute.showResultIcon(false, true);
         }
     }
 

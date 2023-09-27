@@ -6,4 +6,6 @@
     <color name="colorBlue">#3F51B5</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorRed">#dd5050</color>
+    <color name="colorActivated">#BC5F02</color>
+    <color name="colorIdle">#F68B1F</color>
 </resources>

@@ -213,6 +213,8 @@ public class WebServiceUtils {
             Log.d(TAG, "IOException " + e.getMessage());
         } catch(JSONException e) {
             Log.d(TAG, "JSONException " + e.getMessage());
+        } catch(Exception e) {
+            Log.d(TAG, "Exception " + e.getMessage());
         } finally {
             if(urlConnection != null) {
                 urlConnection.disconnect();

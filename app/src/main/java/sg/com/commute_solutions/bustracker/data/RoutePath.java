@@ -3,11 +3,11 @@ package sg.com.commute_solutions.bustracker.data;
 /**
  * Created by Kyle on 29/9/16.
  */
-public class Routes {
+public class RoutePath {
     private Double longitude;
     private Double latitude;
 
-    public Routes(Double longitude, Double latitude) {
+    public RoutePath(Double longitude, Double latitude) {
         this.longitude = longitude;
         this.latitude = latitude;
     }

@@ -23,7 +23,7 @@
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.MapFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1">
 
         </FrameLayout>
@@ -31,24 +31,32 @@
         <Button
             android:id="@+id/btnReload"
             android:layout_width="match_parent"
-            android:layout_height="190dp"
-            android:layout_weight="1"
-            android:background="#F68B1F"
+            android:layout_height="wrap_content"
+            android:background="@color/colorIdle"
             android:text="@string/reload_job"
+            android:textColor="@color/colorWhite"
+            android:visibility="gone"
+            tools:ignore="TextContrastCheck" />
+
+        <in.shadowfax.proswipebutton.ProSwipeButton
+            android:id="@+id/btnEndRoute"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:bg_color="@color/colorIdle"
+            app:btn_text="@string/end_trip" />
 
         <LinearLayout
             android:id="@+id/lnrFourDigit"
             android:layout_width="match_parent"
-            android:layout_height="110dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginBottom="5dp"
             android:background="@drawable/border"
-            android:orientation="horizontal">
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="visible">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -63,9 +71,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_weight="1"
                     android:text="Please Call Office"
-                    android:textSize="17dp" />
+                    android:textSize="17sp" />
 
                 <TextView
                     android:id="@+id/txt_fourDigit"
@@ -73,51 +80,44 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="-15dp"
-                    android:layout_weight="115"
                     android:text="Error"
-                    android:textSize="60dp"
+                    android:textSize="60sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/txt_passenger_name"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="0dp"
                     android:layout_gravity="center_horizontal"
-                    android:layout_weight="1"
-                    android:textSize="25dp"
+                    android:textSize="25sp"
                     android:visibility="gone" />
 
             </LinearLayout>
 
-            <FrameLayout
-                android:layout_width="100dp"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="gone">
+                android:orientation="vertical">
 
+                <ImageButton
+                    android:id="@+id/btnMaps"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/colorIdle"
+                    android:contentDescription="@string/open_google_map"
+                    android:minHeight="48dp"
+                    app:srcCompat="@android:drawable/ic_dialog_map" />
 
-                <ImageView
-                    android:id="@+id/imgPhone"
-                    android:layout_width="75dp"
+                <ImageButton
+                    android:id="@+id/btnPhone"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:src="@drawable/frame" />
-
-                <ImageView
-                    android:id="@+id/imgBackground"
-                    android:layout_width="65dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginTop="15dp"
-                    android:layout_marginEnd="15dp"
-                    android:layout_marginBottom="15dp"
-                    android:background="@color/colorRed"
-                    android:radius="12dp"
-                    android:src="@drawable/phone" />
-
-            </FrameLayout>
+                    android:backgroundTint="@color/colorIdle"
+                    android:contentDescription="@string/call_contact_center"
+                    android:minHeight="48dp"
+                    app:srcCompat="@android:drawable/stat_sys_phone_call" />
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -140,7 +140,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#F68B1F"
+            android:background="@color/colorIdle"
             app:popupTheme="@style/AppTheme.PopupOverlay">
 
             <LinearLayout
@@ -157,7 +157,7 @@
                     android:text="@string/auto" />
 
                 <ImageView
-                    android:id="@+id/iv_nfcconnectionstatus"
+                    android:id="@+id/iv_nfc_connection_status"
                     android:layout_width="53dp"
                     android:layout_height="match_parent"
                     android:layout_gravity="center" />
@@ -185,13 +185,27 @@
         android:layout_gravity="end"
         android:contentDescription="@string/settings"
         android:src="@drawable/info"
-        app:backgroundTint="#F68B1F"
+        app:backgroundTint="@color/colorIdle"
         app:elevation="4dp"
         app:fab_label="@string/settings"
         app:fab_size="mini"
         app:menu_colorNormal="#2272CD" />
 
-    <FrameLayout
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_schedule"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginEnd="56dp"
+        android:contentDescription="@string/settings"
+        android:src="@drawable/icon_sheet"
+        app:backgroundTint="@color/colorIdle"
+        app:elevation="4dp"
+        app:fab_label="@string/settings"
+        app:fab_size="mini"
+        app:menu_colorNormal="#2272CD" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/fl_popupWindow"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -201,35 +215,55 @@
         android:layout_marginBottom="72dp"
         android:background="@drawable/popover_background"
         android:clickable="true"
-        android:padding="20dp"
+        android:focusable="true"
         android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnRouteTmr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/colorIdle"
+            android:text="@string/tomorrow"
+            android:textColor="@color/colorWhite"
+            app:layout_constraintStart_toEndOf="@+id/btnRouteToday"
+            app:layout_constraintTop_toTopOf="@id/btnRouteToday" />
+
+        <Button
+            android:id="@+id/btnRouteToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/colorActivated"
+            android:text="@string/today"
+            android:textColor="@color/colorWhite"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/btn_closePopup"
-            android:layout_width="50dp"
-            android:layout_height="48dp"
-            android:layout_gravity="end"
-            android:src="@drawable/close_icon" />
-
-        <ScrollView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="70dp"
-            android:fillViewport="true">
+            android:contentDescription="@string/close_popup"
+            android:src="@drawable/close_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TableLayout
-                android:id="@+id/table_passengerList"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:stretchColumns="0,1"></TableLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewJobSchedule"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnRouteToday" />
 
-        </ScrollView>
-
-    </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
-        android:id="@+id/btn_starttrip"
+        android:id="@+id/btn_start_trip"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -239,7 +273,7 @@
         android:visibility="gone" />
 
     <ImageView
-        android:id="@+id/btn_endtrip"
+        android:id="@+id/btn_end_trip"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"

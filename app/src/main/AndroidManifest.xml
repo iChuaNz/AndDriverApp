@@ -222,9 +222,9 @@
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+        <!-- [END firebase_iid_service] -->
         <service android:name="sg.com.commute_solutions.bustracker.service.GoogleServices" />
         <service android:name="sg.com.commute_solutions.bustracker.service.BackgroundLocationService" />
-        <!-- [END firebase_iid_service] -->
 
     </application>
 
