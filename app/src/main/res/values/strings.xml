@@ -119,6 +119,7 @@
     <string name="cost">Cost Per Month</string>
     <string name="service_already_running">Service is already running</string>
     <string name="service_start_successfully">Service start successfully</string>
+    <string name="start_trip">START TRIP</string>
     <string name="end_trip">END TRIP</string>
     <string name="reload_job">Reload Job</string>
     <string name="auto">Camera - Auto</string>

@@ -1,35 +1,27 @@
 package sg.com.commute_solutions.bustracker.fragments;
 
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
-
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.ContentValues;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-
 import android.provider.Settings;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.MotionEvent;
-
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.BaseAdapter;
@@ -42,14 +34,17 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONObject;
-import org.w3c.dom.Text;
+
+import java.util.ArrayList;
 
 import sg.com.commute_solutions.bustracker.BuildConfig;
 import sg.com.commute_solutions.bustracker.R;
-import sg.com.commute_solutions.bustracker.util.StringUtil;
 import sg.com.commute_solutions.bustracker.common.Constants;
 import sg.com.commute_solutions.bustracker.common.Preferences;
+import sg.com.commute_solutions.bustracker.util.StringUtil;
 import sg.com.commute_solutions.bustracker.webservices.WebServiceTask;
 import sg.com.commute_solutions.bustracker.webservices.WebServiceUtils;
 
@@ -76,7 +71,7 @@ public class SettingsActivity extends AppCompatActivity {
     private Handler mHandler;
     private View dialogView, showMessageView, showCanIdView;
 
-    private Switch swShowMessages, swShowCanId;
+    private Switch swShowMessages, swShowCanId, swTripApi;
     private RadioGroup rgNFC;
     private RadioButton rgInternal, rgExternal, rgUsb;
     private Button btnLogout, btnChgSettings, btnScan, btnDisconnect;
@@ -317,19 +312,16 @@ public class SettingsActivity extends AppCompatActivity {
             txtSelectedNFC.setText("当前设置：" + NFC);
         }
 
-        btnLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        btnLogout.setOnClickListener(view -> {
 //                if (authToken!= null) {
 //                    mLogoutTask.execute((Void) null);
 //                }
 //                clearApplicationData();
-                prefs.edit().clear().commit();
-                SettingsActivity.this.finishAffinity();
-                Intent i = new Intent(getApplicationContext(),LoginActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
-            }
+            prefs.edit().clear().apply();
+            Intent i = new Intent(getApplicationContext(),LoginActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            finish();
         });
     }
 

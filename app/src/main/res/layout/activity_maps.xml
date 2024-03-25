@@ -48,6 +48,28 @@
             app:bg_color="@color/colorIdle"
             app:btn_text="@string/end_trip" />
 
+        <in.shadowfax.proswipebutton.ProSwipeButton
+            android:id="@+id/btn_end_adhoc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:bg_color="@color/colorIdle"
+            app:btn_text="@string/end_trip" />
+
+        <in.shadowfax.proswipebutton.ProSwipeButton
+            android:id="@+id/btn_start_adhoc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:bg_color="@color/colorIdle"
+            app:btn_text="@string/start_trip" />
+
         <LinearLayout
             android:id="@+id/lnrFourDigit"
             android:layout_width="match_parent"
@@ -60,8 +82,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="bottom"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
@@ -82,7 +103,8 @@
                     android:layout_marginTop="-15dp"
                     android:text="Error"
                     android:textSize="60sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/txt_passenger_name"
@@ -90,6 +112,22 @@
                     android:layout_height="0dp"
                     android:layout_gravity="center_horizontal"
                     android:textSize="25sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/txt_remarks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/txt_jobStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="60dp"
+                    android:gravity="center_vertical"
+                    android:textSize="12sp"
                     android:visibility="gone" />
 
             </LinearLayout>
@@ -163,16 +201,6 @@
                     android:layout_gravity="center" />
 
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/txt_jobStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="60dp"
-                android:gravity="center_vertical|center_horizontal"
-                android:textSize="12sp"
-                android:visibility="visible" />
 
         </androidx.appcompat.widget.Toolbar>
 
@@ -261,27 +289,6 @@
             app:layout_constraintTop_toBottomOf="@+id/btnRouteToday" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <ImageView
-        android:id="@+id/btn_start_trip"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/starttrip"
-        android:visibility="gone" />
-
-    <ImageView
-        android:id="@+id/btn_end_trip"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/endtrip"
-        android:visibility="gone" />
-
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

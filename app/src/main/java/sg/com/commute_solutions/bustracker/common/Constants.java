@@ -195,9 +195,9 @@ public class Constants {
 //    public static final String ROUTEPOINTS = END_POINT + "/track/RoutePoints/";
 
     //Staging
-    public static final String END_POINT = "https://bustrackerstaging.azurewebsites.net/api/2";
+//    public static final String END_POINT = "https://bustrackerstaging.azurewebsites.net/api/2";
     //Production
-//    public static final String END_POINT = "https://bustracker.azurewebsites.net/api/2";
+    public static final String END_POINT = "https://bustracker.azurewebsites.net/api/2";
     public static final String LOGIN_URL = END_POINT + "/user/login";
     public static final String LOG_SHEET_URL = END_POINT + "/logsheet/PostLogSheet";
     public static final String LOGIN_URL_V2 = END_POINT + "/user/loginV2";
@@ -212,7 +212,9 @@ public class Constants {
     public static final String VERSION_URL = END_POINT + "/user/login";
     public static final String LOCATION_URL = END_POINT + "/locations/gps";
     public static final String JOBS_URL = END_POINT + "/Jobs";
+    public static final String TRIPS_URL = JOBS_URL + "/Trips";
     public static final String ALL_JOBS_URL = JOBS_URL + "/All";
+    public static final String ALL_TRIPS_URL = JOBS_URL + "/AllTrips";
     public static final String START_TRIP_URL = JOBS_URL + "/startTrip";
     public static final String END_TRIP_URL = JOBS_URL + "/endTrip";
     public static final String END_TRIP_ROUTE_URL = JOBS_URL + "/EndTripRoute";
@@ -305,6 +307,10 @@ public class Constants {
     public static final String ENABLEEXTERNAL = "externalNfc";
     public static final String FOURDIGITCODE = "fourDigitCode";
     public static final String CODENAME = "codeName";
+    public static final String VEHICLE_NO = "vehicleNo";
+    public static final String REMARKS = "remarks";
+    public static final String DURATION = "duration";
+    public static final String SERVICE_TYPE = "serviceType";
     public static final String ROUTEID = "routeId";
 //    public static final String ISADHOC = "isAdhoc";
 

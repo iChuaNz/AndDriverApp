@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -74,12 +75,19 @@ import com.acs.bluetooth.BluetoothReaderGattCallback;
 import com.acs.bluetooth.BluetoothReaderManager;
 import com.acs.smartcard.Reader;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -88,6 +96,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.Task;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -187,6 +196,8 @@ public class MapsActivity extends AppCompatActivity
     private String fourDigitCode = "";
     private String codeName = "";
     private int routeID = 0;
+    private String remarks = "";
+    private String pocContactNo = "";
     private ArrayList<Boolean> isDropOffArray;
 
 //    private int maxVolume, sound;
@@ -250,6 +261,7 @@ public class MapsActivity extends AppCompatActivity
     private static final int CHECK_BLUETOOTH_ON = 1;
     private static final int CHECK_NFC_ON = 2;
     private static final int CHECK_GPS_ON = 3;
+    private static final int REQUEST_CHECK_SETTINGS = 4;
 
     private int exitCount = 0;
 
@@ -264,7 +276,15 @@ public class MapsActivity extends AppCompatActivity
         activityMapsBinding = ActivityMapsBinding.inflate(getLayoutInflater());
 
         setContentView(activityMapsBinding.getRoot());
+        // clear FLAG_TRANSLUCENT_STATUS flag:
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        getWindow().setStatusBarColor(getResources().getColor(R.color.colorActivated));
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        turnOnLocationSetting();
+
         prefs = this.getSharedPreferences(Constants.SHARE_PREFERENCE_PACKAGE, Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = prefs.edit();
         editor.putString(Preferences.CURRENTACTIVITY, "map");
@@ -313,7 +333,7 @@ public class MapsActivity extends AppCompatActivity
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        mMapFragment = MapFragment.newInstance();
+        mMapFragment = MapFragment.newInstance(new GoogleMapOptions().mapToolbarEnabled(true));
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.map, mMapFragment);
         fragmentTransaction.commit();
@@ -541,26 +561,38 @@ public class MapsActivity extends AppCompatActivity
         }
 
         activityMapsBinding.btnMaps.setOnClickListener(view -> {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (RoutePoint point : routePoints) {
-                stringBuilder.append(point.getLatitude()).append(",").append(point.getLongitude()).append("+to:");
-            }
-            stringBuilder.substring(0,stringBuilder.length() - 4);
-            Uri mapsUri = Uri.parse("http://maps.google.com/maps?daddr=" + stringBuilder);
-            Intent mapsIntent = new Intent(Intent.ACTION_VIEW, mapsUri);
-            mapsIntent.setPackage("com.google.android.apps.maps");
+            if(routePoints.size() > 0){
+                StringBuilder stringBuilder = new StringBuilder();
+                for (RoutePoint point : routePoints) {
+                    stringBuilder.append(point.getLatitude()).append(",").append(point.getLongitude()).append("+to:");
+                }
+                stringBuilder.substring(0,stringBuilder.length() - 4);
+                Uri mapsUri = Uri.parse("http://maps.google.com/maps?daddr=" + stringBuilder);
+                Intent mapsIntent = new Intent(Intent.ACTION_VIEW, mapsUri);
+                mapsIntent.setPackage("com.google.android.apps.maps");
 
-            try {
-                startActivity(mapsIntent);
-            } catch (ActivityNotFoundException ex) {
-                toast("Google Maps application not installed");
+                try {
+                    startActivity(mapsIntent);
+                } catch (ActivityNotFoundException ex) {
+                    toast("Google Maps application not installed");
+                }
+            } else {
+                toast("Route point is empty, please reload job");
             }
-
         });
 
         activityMapsBinding.btnPhone.setOnClickListener(v -> {
             Intent callIntent = new Intent(Intent.ACTION_CALL);
-            callIntent.setData(Uri.parse("tel:67340147"));
+            if (isAdhoc){
+                if (pocContactNo.isEmpty()){
+                    toast("Adhoc job has no contact number");
+                    return;
+                } else {
+                    callIntent.setData(Uri.parse("tel:" + pocContactNo));
+                }
+            } else {
+                callIntent.setData(Uri.parse("tel:67340147"));
+            }
             if (ActivityCompat.checkSelfPermission(MapsActivity.this,
                     Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MapsActivity.this,
@@ -642,106 +674,64 @@ public class MapsActivity extends AppCompatActivity
             mJobScheduleTask.execute((Void) null);
         });
 
-        if (isAdhoc) {
-
-            activityMapsBinding.txtJobStatus.setVisibility(View.VISIBLE);
-            int jobStatus = adhocJob.getJobStatus();
-            switch (jobStatus) {
-                case 0:
-                    activityMapsBinding.btnStartTrip.setVisibility(View.VISIBLE);
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.START_JOB_MESSAGE);
-                        activityMapsBinding.btnStartTrip.setOnClickListener(v -> builder.setMessage(Constants.START_JOB_CONFIRMATION)
-                                .setCancelable(false)
-                                .setPositiveButton("Yes - Start Job", (dialog, which) -> {
-                                    mStartTripTask = new StartTripTask(adhocJob.getId());
-                                    mStartTripTask.execute((Void) null);
-                                })
-                                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
-                                .show());
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.START_JOB_MESSAGE_CH);
-                        activityMapsBinding.btnStartTrip.setOnClickListener(v -> builder.setMessage(Constants.START_JOB_CONFIRMATION_CH)
-                                .setCancelable(false)
-                                .setPositiveButton("开始", (dialog, which) -> {
-                                    mStartTripTask = new StartTripTask(adhocJob.getId());
-                                    mStartTripTask.execute((Void) null);
-                                })
-                                .setNegativeButton("取消", (dialog, which) -> dialog.dismiss())
-                                .show());
-                    }
-                    break;
-                case 1:
-                    activityMapsBinding.btnEndTrip.setVisibility(View.VISIBLE);
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_ONGOING_MESSAGE);
-                        activityMapsBinding.btnEndTrip.setOnClickListener(v -> builder.setMessage(Constants.END_JOB_CONFIRMATION)
-                                .setCancelable(false)
-                                .setPositiveButton("Yes-I have finished this charter", (dialog, which) -> {
-                                    mEndTripTask = new EndTripTask(adhocJob.getId(), false);
-                                    mEndTripTask.execute((Void) null);
-                                })
-                                .setNeutralButton("No-Passenger did not show up", (dialog, which) -> {
-                                    mEndTripTask = new EndTripTask(adhocJob.getId(), true);
-                                    mEndTripTask.execute((Void) null);
-                                })
-                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                                .show());
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_ONGOING_MESSAGE_CH);
-                        activityMapsBinding.btnEndTrip.setOnClickListener(v -> builder.setMessage(Constants.END_JOB_CONFIRMATION_CH)
-                                .setCancelable(false)
-                                .setPositiveButton("Yes-I have finished this charter", (dialog, which) -> {
-                                    mEndTripTask = new EndTripTask(adhocJob.getId(), false);
-                                    mEndTripTask.execute((Void) null);
-                                })
-                                .setNeutralButton("No-Passenger did not show up", (dialog, which) -> {
-                                    mEndTripTask = new EndTripTask(adhocJob.getId(), true);
-                                    mEndTripTask.execute((Void) null);
-                                })
-                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                                .show());
-                    }
-                    activityMapsBinding.txtJobStatus.setTextColor(Color.RED);
-                    setBlinkingView(activityMapsBinding.txtJobStatus);
-                    break;
-                case 2:
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.END_JOB_MESSAGE);
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.END_JOB_MESSAGE_CH);
-                    }
-                    activityMapsBinding.txtJobStatus.setTextColor(Color.BLACK);
-                    break;
-                case 3:
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE);
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE_CH);
-                    }
-                    activityMapsBinding.txtJobStatus.setTextColor(Color.RED);
-                    break;
-                default:
-                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                        builder.setMessage(Constants.ADHOC_ERROR_MESSAGE + adhocJob.getId())
-                                .setCancelable(false)
-                                .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
-                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                        builder.setMessage(Constants.ADHOC_ERROR_MESSAGE_CH + adhocJob.getId())
-                                .setCancelable(false)
-                                .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
-                    }
-                    break;
-            }
-        }
         startMyService();
+    }
+
+    private void turnOnLocationSetting() {
+        LocationRequest locationRequest = LocationRequest.create()
+                .setInterval(3000)
+                .setFastestInterval(1000)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+
+        Task<LocationSettingsResponse> result =
+                LocationServices.getSettingsClient(this).checkLocationSettings(builder.build());
+
+        result.addOnCompleteListener(task -> {
+            try {
+                LocationSettingsResponse response = task.getResult(ApiException.class);
+                // All location settings are satisfied. The client can initialize location
+                // requests here.
+            } catch (ApiException exception) {
+                switch (exception.getStatusCode()) {
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied. But could be fixed by showing the
+                        // user a dialog.
+                        try {
+                            // Cast to a resolvable exception.
+                            ResolvableApiException resolvable = (ResolvableApiException) exception;
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            resolvable.startResolutionForResult(
+                                    MapsActivity.this,
+                                    REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        } catch (ClassCastException e) {
+                            // Ignore, should be an impossible error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way to fix the
+                        // settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
+
     }
 
     @Override
     public void onBackPressed() {
-        exitCount++;
-        if (exitCount > 1) {
-            super.onBackPressed();
+        if(activityMapsBinding.flPopupWindow.getVisibility() == View.VISIBLE){
+            activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
+        } else {
+            exitCount++;
+            if (exitCount > 1) {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -771,6 +761,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        googleMap.getUiSettings().setMapToolbarEnabled(true);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(SINGAPORE, 12));
         enableLocationPermission();
 
@@ -855,6 +846,8 @@ public class MapsActivity extends AppCompatActivity
         super.onResume();
         registerReceiver(mReceiver, new IntentFilter(GoogleServices.str_receiver));
 //        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        startPollingLocation();
+        startCheckingProximity();
     }
 
     @Override
@@ -862,6 +855,8 @@ public class MapsActivity extends AppCompatActivity
         super.onPause();
         unregisterReceiver(mReceiver);
 //        mSensorManager.unregisterListener(this);
+        stopPollingLocation();
+        stopCheckingProximity();
     }
 
     @Override
@@ -900,7 +895,7 @@ public class MapsActivity extends AppCompatActivity
         }
 
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        setNFCSettings(true);
+//        setNFCSettings(true);
     }
 
     @Override
@@ -969,7 +964,7 @@ public class MapsActivity extends AppCompatActivity
 //                mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
 //                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
-        setNFCSettings(false);
+//        setNFCSettings(false);
     }
 
     private void updateCameraBearing(GoogleMap googleMap, float bearing) {
@@ -1018,6 +1013,14 @@ public class MapsActivity extends AppCompatActivity
 
     private void drawMarkersAndRoutes() {
         if (routePoints != null && routePoints.size() > 0) {
+            isShareTransport = false;
+            for(RoutePoint point : routePoints){
+                if (point.getNumberOfPassengers() > 0) {
+                    isShareTransport = true;
+                    break;
+                }
+            }
+
             busRoute = new PolylineOptions();
             jobMarker = new MarkerOptions();
             timeMarker = new MarkerOptions();
@@ -1760,60 +1763,73 @@ public class MapsActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CHECK_BLUETOOTH_ON) {
-            // Make sure the request was successful
-            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            dialogInterface.dismiss();
-            if (!mBluetoothAdapter.isEnabled()) {
-                if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                    Toast.makeText(context, "Please turn on Bluetooth first.", Toast.LENGTH_SHORT).show();
-                } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                    Toast.makeText(context, "请启动蓝牙以继续使用定位系统。", Toast.LENGTH_SHORT).show();
-                }
-                startActivityForResult(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), CHECK_BLUETOOTH_ON);
-            } else {
-                //do nothing
-            }
-        }
-
-        if (requestCode == CHECK_NFC_ON) {
-            // Make sure the request was successful
-            NfcManager mNFCmanager = (NfcManager) context.getSystemService(Context.NFC_SERVICE);
-            NfcAdapter mNFCAdapter = mNFCmanager.getDefaultAdapter();
-            dialogInterface.dismiss();
-            if (!mNFCAdapter.isEnabled()) {
-                if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                    Toast.makeText(context, "Please turn on NFC first.", Toast.LENGTH_SHORT).show();
-                }
-                if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                    Toast.makeText(context, "请开启NFC以继续使用定位系统。", Toast.LENGTH_SHORT).show();
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    startActivityForResult(new Intent(Settings.ACTION_NFC_SETTINGS), CHECK_NFC_ON);
-                } else {
-                    startActivityForResult(new Intent(Settings.ACTION_WIRELESS_SETTINGS), CHECK_NFC_ON);
-                }
-            } else {
-                //do nothing
-            }
-        }
-
-        if (requestCode == CHECK_GPS_ON) {
-            // Make sure the request was successful
-            dialogInterface.dismiss();
-            if (!GPSUtil.isLocationEnabled(context)) {
+        switch (requestCode) {
+            case CHECK_BLUETOOTH_ON:
+                // Make sure the request was successful
+                BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                 dialogInterface.dismiss();
-                if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                    Toast.makeText(context, "Please turn on GPS.", Toast.LENGTH_SHORT).show();
+                if (!mBluetoothAdapter.isEnabled()) {
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        toast("Please turn on Bluetooth first.");
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        toast("请启动蓝牙以继续使用定位系统。");
+                    }
+                    startActivityForResult(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), CHECK_BLUETOOTH_ON);
+                } else {
+                    //do nothing
                 }
-                if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                    Toast.makeText(context, "请打开GPS。", Toast.LENGTH_SHORT).show();
+                break;
+            case CHECK_NFC_ON:
+                // Make sure the request was successful
+                NfcManager mNFCmanager = (NfcManager) context.getSystemService(Context.NFC_SERVICE);
+                NfcAdapter mNFCAdapter = mNFCmanager.getDefaultAdapter();
+                dialogInterface.dismiss();
+                if (!mNFCAdapter.isEnabled()) {
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        Toast.makeText(context, "Please turn on NFC first.", Toast.LENGTH_SHORT).show();
+                    }
+                    if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        Toast.makeText(context, "请开启NFC以继续使用定位系统。", Toast.LENGTH_SHORT).show();
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        startActivityForResult(new Intent(Settings.ACTION_NFC_SETTINGS), CHECK_NFC_ON);
+                    } else {
+                        startActivityForResult(new Intent(Settings.ACTION_WIRELESS_SETTINGS), CHECK_NFC_ON);
+                    }
+                } else {
+                    //do nothing
                 }
+                break;
+            case CHECK_GPS_ON:
+                // Make sure the request was successful
+                dialogInterface.dismiss();
+                if (!GPSUtil.isLocationEnabled(context)) {
+                    dialogInterface.dismiss();
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        Toast.makeText(context, "Please turn on GPS.", Toast.LENGTH_SHORT).show();
+                    }
+                    if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        Toast.makeText(context, "请打开GPS。", Toast.LENGTH_SHORT).show();
+                    }
 
-                startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
-            } else {
-                //do nothing
-            }
+                    startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), CHECK_GPS_ON);
+                } else {
+                    //do nothing
+                }
+                break;
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        // All required changes were successfully made
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but chose not to
+                        toast("Please turn on Location setting first");
+                        turnOnLocationSetting();
+                    default:
+                        break;
+                }
+                break;
         }
     }
 
@@ -1868,6 +1884,105 @@ public class MapsActivity extends AppCompatActivity
             drawMarkersAndRoutes();
         }
         startPollingLocation();
+    }
+
+    private void showAdhoc(){
+        if (isAdhoc) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            int jobStatus = adhocJob.getJobStatus();
+            switch (jobStatus) {
+                case 0:
+                    activityMapsBinding.txtJobStatus.setVisibility(View.GONE);
+                    activityMapsBinding.btnStartAdhoc.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnEndAdhoc.setVisibility(View.GONE);
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        activityMapsBinding.btnStartAdhoc.setOnSwipeListener(() -> builder.setMessage(Constants.START_JOB_CONFIRMATION)
+                                .setCancelable(false)
+                                .setPositiveButton("Yes - Start Job", (dialog, which) -> {
+                                    mStartTripTask = new StartTripTask(adhocJob.getId());
+                                    mStartTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                                .show());
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        activityMapsBinding.btnStartAdhoc.setOnSwipeListener(() -> builder.setMessage(Constants.START_JOB_CONFIRMATION_CH)
+                                .setCancelable(false)
+                                .setPositiveButton("开始", (dialog, which) -> {
+                                    mStartTripTask = new StartTripTask(adhocJob.getId());
+                                    mStartTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("取消", (dialog, which) -> dialog.dismiss())
+                                .show());
+                    }
+                    break;
+                case 1:
+                    activityMapsBinding.txtJobStatus.setVisibility(View.GONE);
+                    activityMapsBinding.btnStartAdhoc.setVisibility(View.GONE);
+                    activityMapsBinding.btnEndAdhoc.setVisibility(View.VISIBLE);
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        activityMapsBinding.btnEndAdhoc.setOnSwipeListener(() -> builder.setMessage(Constants.END_JOB_CONFIRMATION)
+                                .setCancelable(false)
+                                .setPositiveButton("Yes-I have finished this charter", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), false);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNeutralButton("No-Passenger did not show up", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), true);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                                .show());
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        activityMapsBinding.btnEndAdhoc.setOnSwipeListener(() -> builder.setMessage(Constants.END_JOB_CONFIRMATION_CH)
+                                .setCancelable(false)
+                                .setPositiveButton("Yes-I have finished this charter", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), false);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNeutralButton("No-Passenger did not show up", (dialog, which) -> {
+                                    mEndTripTask = new EndTripTask(adhocJob.getId(), true);
+                                    mEndTripTask.execute((Void) null);
+                                })
+                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                                .show());
+                    }
+                    break;
+                case 2:
+                    activityMapsBinding.txtJobStatus.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnStartAdhoc.setVisibility(View.GONE);
+                    activityMapsBinding.btnEndAdhoc.setVisibility(View.GONE);
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        activityMapsBinding.txtJobStatus.setText(Constants.END_JOB_MESSAGE);
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        activityMapsBinding.txtJobStatus.setText(Constants.END_JOB_MESSAGE_CH);
+                    }
+                    activityMapsBinding.txtJobStatus.setTextColor(Color.BLACK);
+                    break;
+                case 3:
+                    activityMapsBinding.txtJobStatus.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnStartAdhoc.setVisibility(View.GONE);
+                    activityMapsBinding.btnEndAdhoc.setVisibility(View.GONE);
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE);
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        activityMapsBinding.txtJobStatus.setText(Constants.JOB_EXPIRED_MESSAGE_CH);
+                    }
+                    activityMapsBinding.txtJobStatus.setTextColor(Color.RED);
+                    break;
+                default:
+                    if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
+                        builder.setMessage(Constants.ADHOC_ERROR_MESSAGE + adhocJob.getId())
+                                .setCancelable(false)
+                                .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
+                    } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
+                        builder.setMessage(Constants.ADHOC_ERROR_MESSAGE_CH + adhocJob.getId())
+                                .setCancelable(false)
+                                .setPositiveButton("Understood", (dialog, which) -> dialog.dismiss()).show();
+                    }
+                    break;
+            }
+        }
     }
 
     private void initialiseMapValues() {
@@ -2205,7 +2320,7 @@ public class MapsActivity extends AppCompatActivity
         public boolean performRequest() {
 
             String accessCode = prefs.getString(Preferences.MANUAL_ACCESSCODE, "CARLSONTEST");
-            String URL = Constants.JOBS_URL;
+            String URL = Constants.TRIPS_URL;
             if (!(accessCode.equalsIgnoreCase("CARLSONTEST") || accessCode.equalsIgnoreCase(""))) {
                 URL = Constants.GET_MANUAL_JOB + "/" + accessCode;
                 contentValues = new ContentValues();
@@ -2222,7 +2337,9 @@ public class MapsActivity extends AppCompatActivity
                 jsonObject = obj.optJSONObject(Constants.DATA);
 
                 if (jsonObject == null) {
-                    activityMapsBinding.txtBoardingCode.setText("No job available for today");
+                    if(mMap != null){
+                        mMap.clear();
+                    }
                     onFailedAttempt();
                     return false;
                 } else {
@@ -2239,8 +2356,10 @@ public class MapsActivity extends AppCompatActivity
                         onFailedAttempt();
                         return false;
                     }
-                    activityMapsBinding.txtFourDigit.setText(fourDigitCode);
-                    activityMapsBinding.txtFourDigit.setVisibility(View.VISIBLE);
+
+                    activityMapsBinding.btnEndRoute.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnMaps.setVisibility(View.VISIBLE);
+                    activityMapsBinding.btnReload.setVisibility(View.GONE);
 
                     if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
                         activityMapsBinding.txtBoardingCode.setText(codeName + " " + Constants.BORDING_CODE_TEXT_EN);
@@ -2250,7 +2369,6 @@ public class MapsActivity extends AppCompatActivity
 
                     if (fourDigitCode.isEmpty()) {
                         activityMapsBinding.txtBoardingCode.setText("Current job: " + codeName);
-                        activityMapsBinding.txtFourDigit.setVisibility(View.GONE);
 
                         if (isSchoolBus) {
                             final Dialog builder = new Dialog(MapsActivity.this);
@@ -2280,6 +2398,9 @@ public class MapsActivity extends AppCompatActivity
                             builder.show();
                         }
                     } else {
+                        activityMapsBinding.txtFourDigit.setText(fourDigitCode);
+                        activityMapsBinding.txtFourDigit.setVisibility(View.VISIBLE);
+
                         final Dialog builder = new Dialog(MapsActivity.this);
 
                         View view = LayoutInflater.from(MapsActivity.this).inflate(R.layout.custom_greeting, null);
@@ -2351,7 +2472,6 @@ public class MapsActivity extends AppCompatActivity
                     }
                     // routePoints
                     JSONArray jobArray = jsonObject.optJSONArray(Constants.ROUTE_POINTS);
-                    isShareTransport = false;
                     routePoints = new ArrayList<>();
                     try {
                         for (int i = 0; i < jobArray.length(); i++) {
@@ -2362,10 +2482,6 @@ public class MapsActivity extends AppCompatActivity
                             Integer type = objPx.getInt(Constants.TYPE);
                             String time = objPx.getString(Constants.TIME);
                             int numberOfPassengers = objPx.getInt(Constants.NOOFPASSENERS);
-
-                            if (numberOfPassengers > 0 && !isShareTransport) {
-                                isShareTransport = true;
-                            }
 
                             RoutePoint job = new RoutePoint(pointName, routeLon, routeLat, type, time, numberOfPassengers);
                             Log.d(LOG_TAG, job.toString());
@@ -2384,8 +2500,23 @@ public class MapsActivity extends AppCompatActivity
                         String id = adhocArray.getString(Constants.BUS_CHARTER_ID);
                         int jobStatus = adhocArray.getInt(Constants.JOBSTATUS);
                         String pocName = adhocArray.getString(Constants.CHARTER_POC_NAME);
-                        String pocContactNo = adhocArray.getString(Constants.CHARTER_POC_CONTACT_NO);
+                        pocContactNo = adhocArray.getString(Constants.CHARTER_POC_CONTACT_NO);
+                        remarks = adhocArray.getString(Constants.REMARKS);
+                        if(!remarks.equals("null")) activityMapsBinding.txtRemarks.setText(remarks);
+                        String duration = adhocArray.getString(Constants.DURATION);
+                        if(!duration.equals("null") && !duration.isEmpty() && !duration.trim().isEmpty()){
+                            duration += "h ";
+                        } else {
+                            duration = "";
+                        }
+                        String serviceType = adhocArray.getString(Constants.SERVICE_TYPE);
+                        if(serviceType.equals("null")) serviceType = "";
+                        String durationService = "";
 
+                        if(!serviceType.isEmpty()){
+                            durationService = " (" + duration + serviceType + ")";
+                        }
+                        activityMapsBinding.txtBoardingCode.setText(activityMapsBinding.txtBoardingCode.getText() + durationService);
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putString(Preferences.ADHOC_CHARTER_ID, id);
                         editor.apply();
@@ -2416,12 +2547,22 @@ public class MapsActivity extends AppCompatActivity
         public void performSuccessfulOperation() {
             Log.d(LOG_TAG, "Data Retrieved Successful!");
 
-            activityMapsBinding.btnEndRoute.setVisibility(View.VISIBLE);
             activityMapsBinding.btnReload.setVisibility(View.GONE);
+            if(isAdhoc){
+                showAdhoc();
+                activityMapsBinding.btnEndRoute.setVisibility(View.GONE);
+            } else {
+                activityMapsBinding.btnEndRoute.setVisibility(View.VISIBLE);
+            }
         }
 
         @Override
         public void onFailedAttempt() {
+            activityMapsBinding.txtBoardingCode.setText("No job available for today");
+            activityMapsBinding.btnStartAdhoc.setVisibility(View.GONE);
+            activityMapsBinding.btnEndAdhoc.setVisibility(View.GONE);
+            activityMapsBinding.btnEndRoute.setVisibility(View.GONE);
+            activityMapsBinding.btnReload.setVisibility(View.VISIBLE);
             displayErrorMessage();
         }
     }
@@ -2433,11 +2574,6 @@ public class MapsActivity extends AppCompatActivity
 
         @Override
         public void showProgress() {
-            if (lang.equalsIgnoreCase(Constants.ENGLISH)) {
-                toast("Receiving job schedule from server...");
-            } else if (lang.equalsIgnoreCase(Constants.CHINESE)) {
-                toast("正在加载工作。。。");
-            }
 
         }
 
@@ -2449,7 +2585,7 @@ public class MapsActivity extends AppCompatActivity
         @Override
         public boolean performRequest() {
 
-            obj = WebServiceUtils.requestJSONObject(Constants.ALL_JOBS_URL, WebServiceUtils.METHOD.GET, authenticationToken, context);
+            obj = WebServiceUtils.requestJSONObject(Constants.ALL_TRIPS_URL, WebServiceUtils.METHOD.GET, authenticationToken, context);
 
 //            Boolean isSuccessful = false;
             if (!hasError(obj)) {
@@ -2472,6 +2608,23 @@ public class MapsActivity extends AppCompatActivity
                             for(int j = 0; j < jobListJson.length(); j++){
                                 jsonObject = jobListJson.getJSONObject(j);
                                 String jobName = jsonObject.getString(Constants.CODENAME);
+                                String vehicleNo = jsonObject.getString(Constants.VEHICLE_NO);
+                                if(vehicleNo.equals("null")) vehicleNo = "";
+                                JSONObject adhocDetails = jsonObject.getJSONObject(Constants.ADHOC);
+                                String busCharterId = adhocDetails.getString(Constants.BUS_CHARTER_ID);
+                                String duration = adhocDetails.getString(Constants.DURATION);
+                                if(!duration.equals("null") && !duration.isEmpty() && !duration.trim().isEmpty()){
+                                    duration += "h ";
+                                } else {
+                                    duration = "";
+                                }
+                                String serviceType = adhocDetails.getString(Constants.SERVICE_TYPE);
+                                if(serviceType.equals("null")) serviceType = "";
+                                String durationService = "";
+
+                                if(!serviceType.isEmpty()){
+                                    durationService = " (" + duration + serviceType + ")";
+                                }
 
                                 // routePaths
                                 JSONArray routeArray = jsonObject.optJSONArray(Constants.ROUTE_PATH);
@@ -2513,30 +2666,35 @@ public class MapsActivity extends AppCompatActivity
                                     return false;
                                 }
 
-                                Job job = new Job(jobName, routePathList, routePointList);
+                                Job job = new Job(jobName, busCharterId, routePathList, routePointList, vehicleNo, durationService);
                                 jobList.add(job);
                             }
 
                             allJobList.add(jobList);
                         }
 
-                        RouteAdapter adapter = new RouteAdapter(allJobList.get(0), getApplicationContext(), codeName, isTodaySelected);
+                        String adhocId = "";
+                        if(adhocJob != null){
+                            adhocId = adhocJob.getId();
+                        }
+
+                        RouteAdapter adapter = new RouteAdapter(allJobList.get(0), getApplicationContext(), codeName, adhocId, isTodaySelected);
                         adapter.setOnClickListener((position, model) -> {
                             adapter.setToday(isTodaySelected);
-                            if(model.getJobName().equals(codeName)){
-                                activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
-                            } else {
+                            routePaths = model.getRoutePaths();
+                            routePoints = model.getRoutePoints();
+                            mMap.clear();
+                            drawMarkersAndRoutes();
+                            activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
+
+                            if (!codeName.equals(model.getJobName()) || (adhocJob != null && adhocJob.getId().equals(model.getBusCharterId()))) {
                                 activityMapsBinding.btnEndRoute.setVisibility(View.GONE);
+                                activityMapsBinding.txtFourDigit.setVisibility(View.GONE);
+                                activityMapsBinding.btnStartAdhoc.setVisibility(View.GONE);
+                                activityMapsBinding.btnEndAdhoc.setVisibility(View.GONE);
                                 activityMapsBinding.btnReload.setVisibility(View.VISIBLE);
-                                activityMapsBinding.flPopupWindow.setVisibility(View.GONE);
 
-                                routePaths = model.getRoutePaths();
-                                routePoints = model.getRoutePoints();
-                                mMap.clear();
-                                drawMarkersAndRoutes();
-
-                                codeName = model.getJobName();
-                                activityMapsBinding.txtBoardingCode.setText("Viewing job " + codeName);
+                                activityMapsBinding.txtBoardingCode.setText("Viewing job " + model.getJobName() + model.getServiceType());
                             }
                         });
                         activityMapsBinding.recyclerViewJobSchedule.setAdapter(adapter);
@@ -2546,8 +2704,12 @@ public class MapsActivity extends AppCompatActivity
                             isTodaySelected = true;
                             if(adapter.isToday()){
                                 adapter.setCurrentJobName(codeName);
+                                if(adhocJob != null){
+                                    adapter.setCurrentCharterId(adhocJob.getId());
+                                }
                             } else {
                                 adapter.setCurrentJobName(null);
+                                adapter.setCurrentCharterId(null);
                             }
                             adapter.setJobData(allJobList.get(0));
                             adapter.notifyDataSetChanged();
@@ -2558,8 +2720,12 @@ public class MapsActivity extends AppCompatActivity
                             isTodaySelected = false;
                             if(!adapter.isToday()){
                                 adapter.setCurrentJobName(codeName);
+                                if(adhocJob != null){
+                                    adapter.setCurrentCharterId(adhocJob.getId());
+                                }
                             } else {
                                 adapter.setCurrentJobName(null);
+                                adapter.setCurrentCharterId(null);
                             }
                             adapter.setJobData(allJobList.get(1));
                             adapter.notifyDataSetChanged();
@@ -2763,10 +2929,8 @@ public class MapsActivity extends AppCompatActivity
         public void performSuccessfulOperation() {
             Log.d(LOG_TAG, "Logged Successful!");
             if (message.equalsIgnoreCase("") || message.isEmpty()) {
-                Intent intent = new Intent(MapsActivity.this, MapsActivity.class);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-                finish();
+                activityMapsBinding.btnStartAdhoc.showResultIcon(true, true);
+                loadJob();
             } else {
                 onFailedAttempt();
             }
@@ -2777,6 +2941,7 @@ public class MapsActivity extends AppCompatActivity
             final AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setMessage(message)
                     .setCancelable(true).show();
+            activityMapsBinding.btnStartAdhoc.showResultIcon(false, true);
         }
     }
 
@@ -2828,10 +2993,8 @@ public class MapsActivity extends AppCompatActivity
         public void performSuccessfulOperation() {
             Log.d(LOG_TAG, "Logged Successful!");
             if (message.equalsIgnoreCase("") || message.isEmpty()) {
-                Intent intent = new Intent(MapsActivity.this, MapsActivity.class);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-                finish();
+                activityMapsBinding.btnEndAdhoc.showResultIcon(true, true);
+                loadJob();
             } else {
                 onFailedAttempt();
             }
@@ -2839,9 +3002,11 @@ public class MapsActivity extends AppCompatActivity
 
         @Override
         public void onFailedAttempt() {
+            if (message.isEmpty()) message = "There is an error happen while ending the adhoc job, please try again";
             final AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setMessage(message)
                     .setCancelable(true).show();
+            activityMapsBinding.btnEndAdhoc.showResultIcon(false, true);
         }
     }
 

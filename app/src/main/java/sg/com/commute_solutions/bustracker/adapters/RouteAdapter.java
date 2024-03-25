@@ -22,6 +22,7 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
     private List<Job> jobData;
     private Context mCtx;
     private String currentJobName;
+    private String currentCharterId;
     private boolean isToday = true;
     private OnClickListener onClickListener;
 
@@ -43,6 +44,14 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
 
     public void setToday(boolean today) {
         isToday = today;
+    }
+
+    public String getCurrentCharterId() {
+        return currentCharterId;
+    }
+
+    public void setCurrentCharterId(String currentCharterId) {
+        this.currentCharterId = currentCharterId;
     }
 
     public interface OnClickListener {
@@ -70,13 +79,15 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
     /**
      * Initialize the dataset of the Adapter
      *
-     * @param jobs String[] containing the data to populate views to be used
-     * by RecyclerView
+     * @param jobs             String[] containing the data to populate views to be used
+     *                         by RecyclerView
+     * @param currentCharterId
      */
-    public RouteAdapter(List<Job> jobs, Context ctx, String currentJob, boolean today) {
+    public RouteAdapter(List<Job> jobs, Context ctx, String currentJob, String currentCharterId, boolean today) {
         jobData = jobs;
         mCtx = ctx;
         currentJobName = currentJob;
+        currentCharterId = currentCharterId;
         isToday = today;
     }
 
@@ -96,7 +107,9 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
         Job job = jobData.get(position);
-        viewHolder.getBinding().textViewRouteName.setText(job.getJobName());
+        viewHolder.getBinding().textViewVehicleNo.setText(job.getVehicleNo());
+        String routeService = job.getJobName() + job.getServiceType();
+        viewHolder.getBinding().textViewRouteName.setText(routeService);
 
         List<RoutePoint> jobRoutes = job.getRoutePoints();
         viewHolder.getBinding().textViewRouteStartTime.setText(jobRoutes.get(0).getTime());
@@ -104,7 +117,8 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.ViewHolder> 
         viewHolder.getBinding().textViewRouteEndTime.setText(jobRoutes.get(jobRoutes.size() - 1).getTime());
         viewHolder.getBinding().textViewRouteEndLocation.setText(jobRoutes.get(jobRoutes.size() - 1).getPointName());
 
-        if (!StringUtil.deNull(currentJobName).isEmpty() && !StringUtil.deNull(job.getJobName()).isEmpty() && job.getJobName().equals(currentJobName)){
+        if (!StringUtil.deNull(currentJobName).isEmpty() && !StringUtil.deNull(job.getJobName()).isEmpty() && job.getJobName().equals(currentJobName)
+            && !StringUtil.deNull(currentCharterId).isEmpty() && !StringUtil.deNull(job.getBusCharterId()).isEmpty() && job.getBusCharterId().equals(currentCharterId)){
             viewHolder.getBinding().routeLayout.setBackground(AppCompatResources.getDrawable(mCtx, R.drawable.popover_background_dark));
         } else {
             viewHolder.getBinding().routeLayout.setBackground(AppCompatResources.getDrawable(mCtx, R.drawable.popover_background));

@@ -7,85 +7,81 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     android:background="@drawable/popover_background"
-    android:padding="16dp">
+    android:padding="8dp">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textViewVehicleNo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="From"
-        app:layout_constraintEnd_toStartOf="@+id/imageView"
+        android:text="Vehicle No"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/imageView" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="To"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView" />
+        app:layout_constraintTop_toTopOf="@+id/textViewRouteName" />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewRouteName"
-        app:srcCompat="@drawable/nextbtnlogo" />
+        app:srcCompat="@drawable/next_btn" />
 
     <TextView
         android:id="@+id/textViewRouteStartTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:maxEms="3"
         android:text="00:00 AM"
+        android:textAlignment="center"
         android:textColor="@android:color/black"
-        android:textSize="24sp"
+        android:textSize="16sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintEnd_toStartOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toTopOf="@+id/imageView" />
 
     <TextView
         android:id="@+id/textViewRouteEndTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:maxEms="3"
         android:text="00:00 AM"
+        android:textAlignment="center"
         android:textColor="@android:color/black"
-        android:textSize="24sp"
+        android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toTopOf="@+id/imageView" />
 
     <TextView
         android:id="@+id/textViewRouteStartLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:maxEms="7"
+        android:ellipsize="end"
+        android:maxEms="5"
+        android:maxLines="2"
         android:text="Woodland"
         android:textAlignment="center"
-        app:layout_constraintEnd_toStartOf="@+id/imageView"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewRouteStartTime"
+        app:layout_constraintEnd_toStartOf="@+id/textViewRouteStartTime"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewRouteStartTime" />
+        app:layout_constraintTop_toTopOf="@+id/textViewRouteStartTime" />
 
     <TextView
         android:id="@+id/textViewRouteEndLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:maxEms="7"
+        android:ellipsize="end"
+        android:maxEms="5"
+        android:maxLines="2"
         android:text="Bus Stop Opp Admiralty Stn (46771), Woodlands Ave 7"
         android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewRouteEndTime"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/textViewRouteEndTime" />
+        app:layout_constraintStart_toEndOf="@+id/textViewRouteEndTime"
+        app:layout_constraintTop_toTopOf="@+id/textViewRouteEndTime" />
 
     <TextView
         android:id="@+id/textViewRouteName"
@@ -93,7 +89,6 @@
         android:layout_height="wrap_content"
         android:text="Route name"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
